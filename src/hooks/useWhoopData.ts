@@ -108,9 +108,21 @@ export function useWhoopData(userId: string | null) {
 
         if (latest?.synced_at) setLastSynced(new Date(latest.synced_at));
 
-        // Auto-sync if: token exists AND (no data yet OR data is older than 3 hours)
-        const isStale = !latest?.synced_at ||
-          (Date.now() - new Date(latest.synced_at).getTime()) > 3 * 60 * 60 * 1000;
+        // Auto-sync if: token exists AND any of:
+        //  1. No data yet
+        //  2. Data is older than 3 hours
+        //  3. Today's data was synced before noon local time AND it's now past noon
+        //     (Whoop typically scores recovery/sleep mid-morning after the cycle closes,
+        //      so an early-AM sync will have stale scores by the afternoon)
+        const syncedAt = latest?.synced_at ? new Date(latest.synced_at) : null;
+        const now = new Date();
+        const noonToday = new Date(now);
+        noonToday.setHours(12, 0, 0, 0);
+        const syncedBeforeNoon = syncedAt ? syncedAt < noonToday : true;
+        const itIsAfterNoon = now >= noonToday;
+        const isStale = !syncedAt ||
+          (Date.now() - syncedAt.getTime()) > 3 * 60 * 60 * 1000 ||
+          (syncedBeforeNoon && itIsAfterNoon);
 
         if (hasToken && isStale) {
           setSyncing(true);
