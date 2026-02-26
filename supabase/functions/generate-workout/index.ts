@@ -12,26 +12,37 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await req.json();
-    const { userId, recoveryScore, sleepScore, recentWhoopData, recentWorkouts, userGoals, user } = body;
+    const { userId, recoveryScore, sleepScore, recentWhoopData, recentWorkouts, userGoals, user, clarifications } = body;
 
     const anthropic = new Anthropic({
       apiKey: Deno.env.get('ANTHROPIC_API_KEY')!,
     });
 
     // Build context for Claude
-    const intensityGuidance =
-      recoveryScore >= 67
-        ? 'GREEN zone (67-100%): Generate a HIGH intensity workout with progressive overload, compound movements, and challenging weights. Push for PRs if sleep is good.'
-        : recoveryScore >= 34
-        ? 'YELLOW zone (34-66%): Generate a MODERATE intensity workout. Maintain current weights, reduce volume by 20%. No max efforts.'
-        : 'RED zone (0-33%): Generate a LOW intensity active recovery workout — mobility, light cardio, yoga flows, or foam rolling. No heavy lifting.';
+    // Whoop is considered "connected" if any biometric is present
+    const hasRecovery = recoveryScore != null;
+    const hasSleep = sleepScore != null;
+    const hasWhoop = hasRecovery || hasSleep || body.strainScore != null || body.recentWhoopData?.length > 0;
+    const recov = recoveryScore ?? null;
+    const sleep = sleepScore ?? null;
 
-    const sleepGuidance =
-      sleepScore < 60
-        ? 'Poor sleep (<60%): Reduce workout complexity, focus on technique and form over weight.'
-        : sleepScore > 75
-        ? 'Good sleep (>75%): Can push for PRs and max efforts.'
-        : 'Average sleep: Standard workout intensity appropriate.';
+    const intensityGuidance = !hasRecovery
+      ? recov === null
+        ? 'RECOVERY DATA PENDING: Whoop is connected but today\'s recovery score is not yet calculated (cycle may still be open). Use recent Whoop history and strain data below for context. Default to moderate intensity.'
+        : 'NO WHOOP DATA: No biometric data available. Base intensity on workout history and user goals only. Default to moderate-high intensity for experienced users, moderate for beginners.'
+      : recov >= 67
+      ? 'GREEN zone (67-100%): Generate a HIGH intensity workout with progressive overload, compound movements, and challenging weights. Push for PRs if sleep is good.'
+      : recov >= 34
+      ? 'YELLOW zone (34-66%): Generate a MODERATE intensity workout. Maintain current weights, reduce volume by 20%. No max efforts.'
+      : 'RED zone (0-33%): Generate a LOW intensity active recovery workout — mobility, light cardio, yoga flows, or foam rolling. No heavy lifting.';
+
+    const sleepGuidance = !hasSleep
+      ? 'Sleep score not yet available for today (may still be calculating).'
+      : sleep! < 60
+      ? 'Poor sleep (<60%): Reduce workout complexity, focus on technique and form over weight.'
+      : sleep! > 75
+      ? 'Good sleep (>75%): Can push for PRs and max efforts.'
+      : 'Average sleep: Standard workout intensity appropriate.';
 
     const recentWorkoutsSummary = recentWorkouts
       .slice(0, 5)
@@ -56,9 +67,10 @@ ATHLETE PROFILE:
 - Injuries/limitations: ${user.injuries_limitations ?? 'none'}
 - Available equipment: Full gym
 
-TODAY'S BIOMETRICS:
-- Recovery score: ${recoveryScore}% — ${intensityGuidance}
-- Sleep performance: ${sleepScore}% — ${sleepGuidance}
+TODAY'S BIOMETRICS (from WHOOP ${hasWhoop ? '— CONNECTED' : '— NOT CONNECTED'}):
+- Recovery score: ${hasRecovery ? `${recoveryScore}%` : 'Not yet calculated'} — ${intensityGuidance}
+- Sleep performance: ${hasSleep ? `${sleepScore}%` : 'Not yet calculated'} — ${sleepGuidance}
+- Today's strain so far: ${body.strainScore != null ? body.strainScore.toFixed(1) : 'Not available'}
 
 RECENT WHOOP DATA (last 7 days):
 ${recentWhoopData.map((d: Record<string, unknown>) => `- ${d.date}: Recovery ${d.recovery_score ?? '?'}%, Sleep ${d.sleep_score ?? '?'}%, HRV ${d.hrv_rmssd ?? '?'}ms, Strain ${d.strain ?? '?'}`).join('\n') || 'No data'}
@@ -68,6 +80,9 @@ ${recentWorkoutsSummary || 'No workout history'}
 
 GOALS:
 ${goalsSummary || 'No specific goals set'}
+
+TODAY'S USER PREFERENCES (from check-in — follow these precisely):
+${clarifications || 'No specific preferences given — use best judgement based on goals and recovery.'}
 
 PROGRESSIVE OVERLOAD RULES:
 - If user completed all planned sets/reps last session → increase weight 5-10 lbs for that exercise
@@ -96,7 +111,7 @@ Required format:
 }`;
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 2048,
       messages: [{ role: 'user', content: prompt }],
     });

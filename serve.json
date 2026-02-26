@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/whoop-callback.html",
+      "destination": "/whoop-callback.html"
+    },
+    {
+      "source": "/**",
+      "destination": "/index.html"
+    }
+  ]
+}

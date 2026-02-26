@@ -1,37 +1,43 @@
 {
   "name": "adaptitrain",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:web": "expo export --platform web",
+    "serve": "npx serve dist --single --listen 3000",
+    "dev": "npx expo export --platform web && pkill -f 'serve dist' 2>/dev/null; npx serve dist --single --listen 3000"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.2",
     "@react-navigation/bottom-tabs": "^6.5.11",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "@supabase/supabase-js": "^2.39.0",
-    "expo": "~51.0.0",
-    "expo-auth-session": "~5.5.2",
-    "expo-crypto": "~13.0.2",
-    "expo-linking": "~6.3.1",
-    "expo-secure-store": "~13.0.2",
-    "expo-status-bar": "~1.12.1",
-    "expo-web-browser": "~13.0.3",
-    "react": "18.2.0",
-    "react-native": "0.74.5",
-    "react-native-safe-area-context": "4.10.5",
-    "react-native-screens": "3.31.1",
-    "react-native-svg": "15.2.0",
-    "victory-native": "^36.9.1",
-    "@react-native-async-storage/async-storage": "1.23.1"
+    "expo": "^54.0.33",
+    "expo-auth-session": "~6.1.5",
+    "expo-crypto": "~14.0.2",
+    "expo-linking": "~7.0.5",
+    "expo-secure-store": "~14.0.1",
+    "expo-status-bar": "~2.2.3",
+    "expo-web-browser": "~14.0.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-native": "^0.76.9",
+    "react-native-safe-area-context": "^4.12.0",
+    "react-native-screens": "^4.4.0",
+    "react-native-svg": "^15.8.0",
+    "react-native-web": "^0.19.13",
+    "victory-native": "^36.9.1"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@types/react": "~18.2.79",
-    "typescript": "^5.3.0"
+    "babel-plugin-module-resolver": "^5.0.2",
+    "typescript": "~5.3.3"
   },
   "private": true
 }

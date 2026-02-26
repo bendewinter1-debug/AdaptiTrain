@@ -1,20 +1,34 @@
 import { createClient } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 
-const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl ?? process.env.SUPABASE_URL ?? '';
-const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey ?? process.env.SUPABASE_ANON_KEY ?? '';
+const supabaseUrl =
+  Constants.expoConfig?.extra?.supabaseUrl ??
+  process.env.SUPABASE_URL ??
+  'https://anshlxckmednqmptcgla.supabase.co';
 
-// Custom storage adapter using SecureStore for sensitive auth tokens
-const ExpoSecureStoreAdapter = {
-  getItem: (key: string) => SecureStore.getItemAsync(key),
-  setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
-  removeItem: (key: string) => SecureStore.deleteItemAsync(key),
-};
+const supabaseAnonKey =
+  Constants.expoConfig?.extra?.supabaseAnonKey ??
+  process.env.SUPABASE_ANON_KEY ??
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuc2hseGNrbWVkbnFtcHRjZ2xhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MDYwNzksImV4cCI6MjA4NzM4MjA3OX0.9fZmmBxyDwA-BffxaLvZjgVcOSgpi1YpkjCSkt5Y10k';
+
+// Use SecureStore on native, localStorage on web
+const StorageAdapter = Platform.OS === 'web'
+  ? {
+      getItem: (key: string) => Promise.resolve(localStorage.getItem(key)),
+      setItem: (key: string, value: string) => Promise.resolve(localStorage.setItem(key, value)),
+      removeItem: (key: string) => Promise.resolve(localStorage.removeItem(key)),
+    }
+  : {
+      getItem: (key: string) => SecureStore.getItemAsync(key),
+      setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
+      removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+    };
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: ExpoSecureStoreAdapter,
+    storage: StorageAdapter,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
@@ -202,6 +216,11 @@ export async function insertExercises(exercises: Record<string, unknown>[]) {
   const { data, error } = await supabase.from('exercises').insert(exercises).select();
   if (error) throw error;
   return data;
+}
+
+export async function deleteExercisesByWorkoutId(workoutId: string) {
+  const { error } = await supabase.from('exercises').delete().eq('workout_id', workoutId);
+  if (error) throw error;
 }
 
 export async function updateExercise(exerciseId: string, updates: Record<string, unknown>) {

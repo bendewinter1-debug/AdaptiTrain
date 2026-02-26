@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Connecting Whoop…</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #f8fafc;
+    }
+    .msg { text-align: center; }
+    .icon { font-size: 48px; margin-bottom: 16px; }
+    p { color: #94a3b8; font-size: 15px; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="msg">
+    <div class="icon">⌚</div>
+    <p>Connecting your Whoop…</p>
+  </div>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var code = params.get('code');
+      var state = params.get('state');
+      var error = params.get('error');
+
+      if (error) {
+        window.opener && window.opener.postMessage(
+          { type: 'WHOOP_AUTH_ERROR', error: error },
+          window.location.origin
+        );
+        window.close();
+        return;
+      }
+
+      if (code) {
+        window.opener && window.opener.postMessage(
+          { type: 'WHOOP_AUTH_SUCCESS', code: code, state: state },
+          window.location.origin
+        );
+        window.close();
+        return;
+      }
+
+      // No code or error — something went wrong
+      window.opener && window.opener.postMessage(
+        { type: 'WHOOP_AUTH_ERROR', error: 'No authorisation code received.' },
+        window.location.origin
+      );
+      window.close();
+    })();
+  </script>
+</body>
+</html>

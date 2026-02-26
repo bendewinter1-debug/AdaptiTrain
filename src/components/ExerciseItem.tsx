@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import type { Exercise } from '../types';
+import { useWeightUnit } from '../hooks/useWeightUnit';
 
 interface Props {
   exercise: Exercise;
@@ -16,6 +17,10 @@ export default function ExerciseItem({ exercise, index, onUpdate, onStartRest }:
   const [completedWeight, setCompletedWeight] = useState(exercise.completed_weight ?? exercise.planned_weight ?? '');
   const [notes, setNotes] = useState(exercise.notes ?? '');
   const [done, setDone] = useState(false);
+  const { unit, convertWeightString } = useWeightUnit();
+
+  // Convert planned weight for display
+  const displayPlannedWeight = exercise.planned_weight ? convertWeightString(exercise.planned_weight) : null;
 
   function handleComplete() {
     const updates: Partial<Exercise> = {
@@ -44,7 +49,7 @@ export default function ExerciseItem({ exercise, index, onUpdate, onStartRest }:
             <Text style={[styles.name, done && styles.nameDone]}>{exercise.exercise_name}</Text>
             <Text style={styles.planned}>
               {exercise.planned_sets} sets × {exercise.planned_reps}
-              {exercise.planned_weight ? ` @ ${exercise.planned_weight}` : ''}
+              {displayPlannedWeight ? ` @ ${displayPlannedWeight}` : ''}
             </Text>
           </View>
         </View>
@@ -76,12 +81,12 @@ export default function ExerciseItem({ exercise, index, onUpdate, onStartRest }:
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Weight</Text>
+              <Text style={styles.inputLabel}>Weight ({unit})</Text>
               <TextInput
                 style={styles.input}
                 value={completedWeight}
                 onChangeText={setCompletedWeight}
-                placeholder={exercise.planned_weight ?? 'BW'}
+                placeholder={displayPlannedWeight ?? 'BW'}
                 placeholderTextColor="#475569"
               />
             </View>

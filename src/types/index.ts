@@ -85,6 +85,7 @@ export interface Workout {
   recovery_score_at_generation?: number;
   ai_reasoning?: string;
   completed: boolean;
+  skipped: boolean;
   rpe?: number;
   notes?: string;
   duration_minutes?: number;

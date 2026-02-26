@@ -13,7 +13,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.adaptitrain.app"
+      "bundleIdentifier": "com.adaptitrain.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,16 +27,22 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single"
     },
     "scheme": "adaptitrain",
     "plugins": [
-      "expo-secure-store",
-      "expo-auth-session"
+      "expo-secure-store"
     ],
     "extra": {
       "supabaseUrl": "https://anshlxckmednqmptcgla.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuc2hseGNrbWVkbnFtcHRjZ2xhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MDYwNzksImV4cCI6MjA4NzM4MjA3OX0.9fZmmBxyDwA-BffxaLvZjgVcOSgpi1YpkjCSkt5Y10k"
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuc2hseGNrbWVkbnFtcHRjZ2xhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MDYwNzksImV4cCI6MjA4NzM4MjA3OX0.9fZmmBxyDwA-BffxaLvZjgVcOSgpi1YpkjCSkt5Y10k",
+      "eas": {
+        "projectId": "92fa34ba-4c2a-4f67-a5fb-03252410ec14"
+      },
+      "router": {
+        "root": "src"
+      }
     }
   }
 }

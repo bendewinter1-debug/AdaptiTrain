@@ -7,7 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const WHOOP_BASE_URL = 'https://api.whoop.com';
+const WHOOP_OAUTH_URL = 'https://api.prod.whoop.com/oauth/oauth2';
+const WHOOP_API_URL = 'https://api.prod.whoop.com/developer/v1';
 const WHOOP_CLIENT_ID = 'ea7da3b6-fd0c-49ec-8763-9cf9ffdf226e';
 const WHOOP_CLIENT_SECRET = Deno.env.get('WHOOP_CLIENT_SECRET') ?? '';
 
@@ -19,7 +20,7 @@ async function refreshToken(refreshToken: string): Promise<{ access_token: strin
     client_secret: WHOOP_CLIENT_SECRET,
   });
 
-  const res = await fetch(`${WHOOP_BASE_URL}/oauth/oauth2/token`, {
+  const res = await fetch(`${WHOOP_OAUTH_URL}/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString(),
@@ -29,9 +30,11 @@ async function refreshToken(refreshToken: string): Promise<{ access_token: strin
 }
 
 async function fetchWithAuth(path: string, token: string) {
-  const res = await fetch(`${WHOOP_BASE_URL}${path}`, {
+  const res = await fetch(`${WHOOP_API_URL}${path}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  // 404 means no data (e.g. recovery not yet calculated), treat as empty
+  if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Whoop API ${path} failed: ${res.status}`);
   return res.json();
 }
@@ -82,27 +85,50 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      // Fetch data
-      const [recoveryData, sleepData, cycleData] = await Promise.allSettled([
-        fetchWithAuth('/v1/recovery?limit=1', accessToken),
-        fetchWithAuth('/v1/activity/sleep?limit=1', accessToken),
-        fetchWithAuth('/v1/cycle?limit=1', accessToken),
+      // Fetch data from Whoop v1 API
+      // Fetch last 3 cycles — current cycle (end:null) has no recovery yet,
+      // so we find the most recent completed one for recovery score.
+      const cycleRes = await fetchWithAuth('/cycle?limit=3', accessToken);
+      const cycles: { id: number; end: string | null; score: Record<string, number> | null }[] =
+        cycleRes?.records ?? [];
+
+      // Most recent cycle (open or closed) for strain
+      const latestCycleScore = cycles[0]?.score ?? null;
+      // Most recently completed cycle for recovery
+      const completedCycle = cycles.find((c) => c.end != null) ?? null;
+
+      const [recoveryRes, sleepRes] = await Promise.allSettled([
+        completedCycle
+          ? fetchWithAuth(`/cycle/${completedCycle.id}/recovery`, accessToken)
+          : Promise.resolve(null),
+        fetchWithAuth('/activity/sleep?limit=2', accessToken),
       ]);
 
-      const recovery = recoveryData.status === 'fulfilled' ? recoveryData.value?.records?.[0]?.score : null;
-      const sleep = sleepData.status === 'fulfilled' ? sleepData.value?.records?.[0]?.score : null;
-      const cycle = cycleData.status === 'fulfilled' ? cycleData.value?.records?.[0]?.score : null;
+      const recoveryRaw = recoveryRes.status === 'fulfilled' ? recoveryRes.value : null;
+      const recovery = recoveryRaw?.score_state === 'SCORED' ? recoveryRaw.score : null;
 
-      const record = {
+      // Use most recent scored non-nap sleep
+      const sleepRecords: { score_state: string; nap?: boolean; score?: Record<string, number> }[] =
+        (sleepRes.status === 'fulfilled' ? sleepRes.value?.records : null) ?? [];
+      const bestSleep = sleepRecords.find(r => r.score_state === 'SCORED' && !r.nap)
+        ?? sleepRecords.find(r => r.score_state === 'SCORED')
+        ?? null;
+      const sleep = bestSleep?.score ?? null;
+
+      const cycle = latestCycleScore;
+
+      // Build partial record — only include fields we actually have data for
+      // so we don't overwrite previously stored values with nulls.
+      const record: Record<string, unknown> = {
         user_id: user.id,
         date: today,
-        recovery_score: recovery?.recovery_score ?? null,
-        sleep_score: sleep?.sleep_performance_percentage ?? null,
-        hrv_rmssd: recovery?.hrv_rmssd_milli ?? null,
-        resting_heart_rate: recovery?.resting_heart_rate ?? null,
-        strain: cycle?.strain ?? null,
         synced_at: new Date().toISOString(),
       };
+      if (recovery?.recovery_score != null) record.recovery_score = recovery.recovery_score;
+      if (recovery?.hrv_rmssd_milli != null) record.hrv_rmssd = recovery.hrv_rmssd_milli;
+      if (recovery?.resting_heart_rate != null) record.resting_heart_rate = recovery.resting_heart_rate;
+      if (sleep?.sleep_performance_percentage != null) record.sleep_score = sleep.sleep_performance_percentage;
+      if (cycle?.strain != null) record.strain = cycle.strain;
 
       await fetch(`${supabaseUrl}/rest/v1/whoop_data`, {
         method: 'POST',
