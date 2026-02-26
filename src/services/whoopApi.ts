@@ -204,10 +204,18 @@ async function whoopGet(path: string, accessToken: string) {
 
 // ─── Data fetching ────────────────────────────────────────────────────────────
 
+// Extract a YYYY-MM-DD date from a Whoop record using end/start/created_at fields
+function whoopRecordDate(record: { end?: string; start?: string; created_at?: string }): string | null {
+  const raw = record.end ?? record.start ?? record.created_at;
+  if (!raw) return null;
+  // Whoop timestamps are ISO strings in UTC — use the date portion as-is
+  return raw.split('T')[0];
+}
+
 export async function fetchLatestRecovery(accessToken: string) {
   // v2 API: /recovery returns a list of recovery records directly (no need to look up cycle first)
   const data = await whoopGet('/recovery?limit=2', accessToken);
-  const records: { score_state: string; score?: { recovery_score?: number; hrv_rmssd_milli?: number; resting_heart_rate?: number } }[] =
+  const records: { score_state: string; end?: string; start?: string; created_at?: string; score?: { recovery_score?: number; hrv_rmssd_milli?: number; resting_heart_rate?: number } }[] =
     data?.records ?? [];
 
   // Find the most recent scored recovery
@@ -215,6 +223,7 @@ export async function fetchLatestRecovery(accessToken: string) {
   if (!scored) return null;
 
   return {
+    date: whoopRecordDate(scored),
     recovery_score: scored.score?.recovery_score ?? null,
     hrv_rmssd: scored.score?.hrv_rmssd_milli ?? null,
     resting_heart_rate: scored.score?.resting_heart_rate ?? null,
@@ -225,7 +234,7 @@ export async function fetchLatestSleep(accessToken: string) {
   // Fetch last 2 sleep records and return the most recent SCORED one
   // (the latest may still be PENDING if the user just woke up)
   const data = await whoopGet('/activity/sleep?limit=2', accessToken);
-  const records: { score_state: string; nap?: boolean; score?: { sleep_performance_percentage?: number } }[] =
+  const records: { score_state: string; nap?: boolean; end?: string; start?: string; created_at?: string; score?: { sleep_performance_percentage?: number } }[] =
     data?.records ?? [];
 
   // Prefer the most recent non-nap scored sleep
@@ -234,6 +243,7 @@ export async function fetchLatestSleep(accessToken: string) {
   if (!scored) return null;
 
   return {
+    date: whoopRecordDate(scored),
     sleep_score: scored.score?.sleep_performance_percentage ?? null,
   };
 }
@@ -245,6 +255,7 @@ export async function fetchLatestStrain(accessToken: string) {
   if (!record) return null;
 
   return {
+    date: whoopRecordDate(record),
     strain: record.score?.strain ?? null,
   };
 }
@@ -280,24 +291,62 @@ export async function syncWhoopData(userId: string, accessToken: string): Promis
   const sleep = sleepResult.status === 'fulfilled' ? sleepResult.value : null;
   const strain = strainResult.status === 'fulfilled' ? strainResult.value : null;
 
-  // Build a partial update — only include fields we actually got data for.
-  // This prevents a successful strain sync from wiping out previously stored
-  // recovery/sleep values with nulls when those endpoints return no data yet.
-  const update: Record<string, unknown> = {
-    user_id: userId,
-    date: today,
-    synced_at: new Date().toISOString(),
-  };
-  if (recovery?.recovery_score != null) update.recovery_score = recovery.recovery_score;
-  if (recovery?.hrv_rmssd != null) update.hrv_rmssd = recovery.hrv_rmssd;
-  if (recovery?.resting_heart_rate != null) update.resting_heart_rate = recovery.resting_heart_rate;
-  if (sleep?.sleep_score != null) update.sleep_score = sleep.sleep_score;
-  if (strain?.strain != null) update.strain = strain.strain;
+  // Use the actual date from the Whoop record where available, falling back to today.
+  // This ensures yesterday's recovery (which Whoop scores after sleep) is stored
+  // against the correct date rather than always being overwritten as today.
+  const recoveryDate = recovery?.date ?? today;
+  const sleepDate = sleep?.date ?? today;
+  const strainDate = strain?.date ?? today;
 
-  // Upsert the row; for existing rows, only the fields present in `update` get overwritten
-  await supabase
-    .from('whoop_data')
-    .upsert(update, { onConflict: 'user_id,date', ignoreDuplicates: false });
+  const now = new Date().toISOString();
+
+  // Upsert each data type against its own correct date.
+  // We do three separate upserts so that recovery (yesterday) and strain (today's cycle)
+  // don't clobber each other's rows.
+  const upserts: Record<string, unknown>[] = [];
+
+  // Recovery + HRV + RHR — keyed by recoveryDate
+  if (recovery?.recovery_score != null || recovery?.hrv_rmssd != null || recovery?.resting_heart_rate != null) {
+    const row: Record<string, unknown> = { user_id: userId, date: recoveryDate, synced_at: now };
+    if (recovery.recovery_score != null) row.recovery_score = recovery.recovery_score;
+    if (recovery.hrv_rmssd != null) row.hrv_rmssd = recovery.hrv_rmssd;
+    if (recovery.resting_heart_rate != null) row.resting_heart_rate = recovery.resting_heart_rate;
+    upserts.push(row);
+  }
+
+  // Sleep score — keyed by sleepDate
+  if (sleep?.sleep_score != null) {
+    const sleepRow: Record<string, unknown> = { user_id: userId, date: sleepDate, synced_at: now, sleep_score: sleep.sleep_score };
+    // Merge into recovery row if same date, otherwise separate upsert
+    const existing = upserts.find(u => u.date === sleepDate);
+    if (existing) {
+      existing.sleep_score = sleep.sleep_score;
+    } else {
+      upserts.push(sleepRow);
+    }
+  }
+
+  // Strain — keyed by strainDate
+  if (strain?.strain != null) {
+    const existing = upserts.find(u => u.date === strainDate);
+    if (existing) {
+      existing.strain = strain.strain;
+    } else {
+      upserts.push({ user_id: userId, date: strainDate, synced_at: now, strain: strain.strain });
+    }
+  }
+
+  // If we got nothing at all, still touch today's row so synced_at is updated
+  if (upserts.length === 0) {
+    upserts.push({ user_id: userId, date: today, synced_at: now });
+  }
+
+  // Upsert all rows; for existing rows, only the fields present get overwritten
+  for (const row of upserts) {
+    await supabase
+      .from('whoop_data')
+      .upsert(row, { onConflict: 'user_id,date', ignoreDuplicates: false });
+  }
 }
 
 // ─── Token persistence ────────────────────────────────────────────────────────

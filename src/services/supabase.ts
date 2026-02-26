@@ -124,15 +124,30 @@ export async function updateGoal(goalId: string, updates: Record<string, unknown
 // ─── Whoop data ──────────────────────────────────────────────────────────────
 
 export async function getLatestWhoopData(userId: string) {
+  // Fetch the 2 most recent rows and merge them.
+  // This handles the common case where Whoop stores recovery/sleep against
+  // yesterday's date and strain against today's date — we merge both so
+  // the UI always shows all available metrics.
   const { data, error } = await supabase
     .from('whoop_data')
     .select('*')
     .eq('user_id', userId)
     .order('date', { ascending: false })
-    .limit(1)
-    .single();
+    .limit(2);
   if (error && error.code !== 'PGRST116') throw error;
-  return data ?? null;
+  if (!data || data.length === 0) return null;
+
+  // Most recent row is primary; fill in missing fields from the second row
+  const primary = { ...data[0] };
+  if (data.length > 1) {
+    const secondary = data[1];
+    if (primary.recovery_score == null && secondary.recovery_score != null) primary.recovery_score = secondary.recovery_score;
+    if (primary.hrv_rmssd == null && secondary.hrv_rmssd != null) primary.hrv_rmssd = secondary.hrv_rmssd;
+    if (primary.resting_heart_rate == null && secondary.resting_heart_rate != null) primary.resting_heart_rate = secondary.resting_heart_rate;
+    if (primary.sleep_score == null && secondary.sleep_score != null) primary.sleep_score = secondary.sleep_score;
+    if (primary.strain == null && secondary.strain != null) primary.strain = secondary.strain;
+  }
+  return primary;
 }
 
 export async function getWhoopDataRange(userId: string, days: number) {
