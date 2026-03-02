@@ -12,15 +12,18 @@ import {
 import { getWorkoutWithExercises, updateWorkout, updateExercise } from '../services/supabase';
 import ExerciseItem from '../components/ExerciseItem';
 import type { Workout, Exercise } from '../types';
+import { useWeightUnit } from '../hooks/useWeightUnit';
 
 interface Props {
   workoutId: string;
   onComplete: () => void;
   onBack: () => void;
+  onMinimize: () => void;
 }
 
-export default function WorkoutScreen({ workoutId, onComplete, onBack }: Props) {
+export default function WorkoutScreen({ workoutId, onComplete, onBack, onMinimize }: Props) {
   const [workout, setWorkout] = useState<Workout | null>(null);
+  const { unit, toggle: toggleUnit } = useWeightUnit();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [elapsed, setElapsed] = useState(0);
   const [restTimer, setRestTimer] = useState(0);
@@ -97,16 +100,24 @@ export default function WorkoutScreen({ workoutId, onComplete, onBack }: Props) 
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack}>
-          <Text style={styles.backBtn}>← Back</Text>
+        <TouchableOpacity onPress={onBack} style={styles.headerSideBtn}>
+          <Text style={styles.backBtn}>✕</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.workoutType}>{workout.workout_type}</Text>
           <Text style={styles.elapsed}>{formatTime(elapsed)}</Text>
         </View>
-        <TouchableOpacity style={styles.finishBtn} onPress={handleFinish}>
-          <Text style={styles.finishBtnText}>Finish</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.unitToggle} onPress={toggleUnit} activeOpacity={0.7}>
+            <Text style={styles.unitToggleText}>{unit === 'kg' ? 'kg' : 'lbs'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.minimizeBtn} onPress={onMinimize} activeOpacity={0.7}>
+            <Text style={styles.minimizeBtnText}>⤵</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.finishBtn} onPress={handleFinish}>
+            <Text style={styles.finishBtnText}>Finish</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Rest Timer Banner */}
@@ -183,10 +194,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#334155',
   },
+  headerSideBtn: { width: 36, alignItems: 'center' },
   backBtn: { color: '#6366f1', fontSize: 16, fontWeight: '600' },
-  headerCenter: { alignItems: 'center' },
+  headerCenter: { alignItems: 'center', flex: 1 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   workoutType: { color: '#f8fafc', fontSize: 14, fontWeight: '600' },
   elapsed: { color: '#6366f1', fontSize: 22, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  unitToggle: { backgroundColor: '#0f172a', borderRadius: 8, borderWidth: 1, borderColor: '#334155', paddingHorizontal: 10, paddingVertical: 6 },
+  unitToggleText: { color: '#94a3b8', fontSize: 13, fontWeight: '700' },
+  minimizeBtn: { padding: 6 },
+  minimizeBtnText: { color: '#64748b', fontSize: 18 },
   finishBtn: { backgroundColor: '#6366f1', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8 },
   finishBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   restBanner: {

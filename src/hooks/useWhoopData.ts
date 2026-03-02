@@ -162,7 +162,9 @@ export function useWhoopData(userId: string | null) {
               // Otherwise silently ignore — strain still synced fine
             }
           } else {
+            // Token refresh failed — prompt user to reconnect
             setWhoopConnected(false);
+            setNeedsReconnect(true);
           }
           setSyncing(false);
         }

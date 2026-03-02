@@ -49,33 +49,43 @@ function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>{icons[name] ?? '●'}</Text>;
 }
 
-function MainTabs({ userId, onStartWorkout, onSignOut, onConnectWhoop, whoopConnectedAt }: {
+function MainTabs({ userId, onStartWorkout, onSignOut, onConnectWhoop, whoopConnectedAt, activeWorkoutId, onResumeWorkout }: {
   userId: string;
   onStartWorkout: (id: string) => void;
   onSignOut: () => void;
   onConnectWhoop: () => void;
   whoopConnectedAt: number;
+  activeWorkoutId: string | null;
+  onResumeWorkout: () => void;
 }) {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarStyle: { backgroundColor: '#1e293b', borderTopColor: '#334155', borderTopWidth: 1 },
-        tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: '#64748b',
-        tabBarIcon: ({ focused }) => <TabIcon name={route.name} focused={focused} />,
-      })}
-    >
-      <Tab.Screen name="Home">
-        {() => <HomeScreen userId={userId} onStartWorkout={onStartWorkout} onConnectWhoop={onConnectWhoop} whoopConnectedAt={whoopConnectedAt} />}
-      </Tab.Screen>
-      <Tab.Screen name="History">
-        {() => <HistoryScreen userId={userId} onViewWorkout={onStartWorkout} />}
-      </Tab.Screen>
-      <Tab.Screen name="Profile">
-        {() => <ProfileScreen userId={userId} onSignOut={onSignOut} onConnectWhoop={onConnectWhoop} />}
-      </Tab.Screen>
-    </Tab.Navigator>
+    <View style={{ flex: 1 }}>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarStyle: { backgroundColor: '#1e293b', borderTopColor: '#334155', borderTopWidth: 1 },
+          tabBarActiveTintColor: '#6366f1',
+          tabBarInactiveTintColor: '#64748b',
+          tabBarIcon: ({ focused }) => <TabIcon name={route.name} focused={focused} />,
+        })}
+      >
+        <Tab.Screen name="Home">
+          {() => <HomeScreen userId={userId} onStartWorkout={onStartWorkout} onConnectWhoop={onConnectWhoop} whoopConnectedAt={whoopConnectedAt} />}
+        </Tab.Screen>
+        <Tab.Screen name="History">
+          {() => <HistoryScreen userId={userId} onViewWorkout={onStartWorkout} />}
+        </Tab.Screen>
+        <Tab.Screen name="Profile">
+          {() => <ProfileScreen userId={userId} onSignOut={onSignOut} onConnectWhoop={onConnectWhoop} />}
+        </Tab.Screen>
+      </Tab.Navigator>
+      {/* Floating pill shown when a workout is running in the background */}
+      {activeWorkoutId && (
+        <TouchableOpacity style={styles.resumePill} onPress={onResumeWorkout} activeOpacity={0.85}>
+          <Text style={styles.resumePillText}>🏋️ Workout in progress — tap to resume</Text>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 }
 
@@ -83,6 +93,7 @@ export default function App() {
   const [appState, setAppState] = useState<AppState>('loading');
   const [userId, setUserId] = useState<string | null>(null);
   const [activeWorkoutId, setActiveWorkoutId] = useState<string | null>(null);
+  const [workoutMinimized, setWorkoutMinimized] = useState(false);
   const [showWhoopModal, setShowWhoopModal] = useState(false);
   const [whoopConnectedAt, setWhoopConnectedAt] = useState<number>(0);
 
@@ -177,22 +188,31 @@ export default function App() {
           />
         )}
 
-        {appState === 'main' && userId && !activeWorkoutId && (
-          <MainTabs
-            userId={userId}
-            onStartWorkout={(id) => setActiveWorkoutId(id)}
-            onSignOut={handleSignOut}
-            onConnectWhoop={() => setShowWhoopModal(true)}
-            whoopConnectedAt={whoopConnectedAt}
-          />
-        )}
-
-        {appState === 'main' && userId && activeWorkoutId && (
-          <WorkoutScreen
-            workoutId={activeWorkoutId}
-            onComplete={() => setActiveWorkoutId(null)}
-            onBack={() => setActiveWorkoutId(null)}
-          />
+        {appState === 'main' && userId && (
+          // Always render MainTabs so timer keeps running when workout is minimized
+          <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, display: (activeWorkoutId && !workoutMinimized) ? 'none' : 'flex' }}>
+              <MainTabs
+                userId={userId}
+                onStartWorkout={(id) => { setActiveWorkoutId(id); setWorkoutMinimized(false); }}
+                onSignOut={handleSignOut}
+                onConnectWhoop={() => setShowWhoopModal(true)}
+                whoopConnectedAt={whoopConnectedAt}
+                activeWorkoutId={activeWorkoutId}
+                onResumeWorkout={() => setWorkoutMinimized(false)}
+              />
+            </View>
+            {activeWorkoutId && (
+              <View style={{ flex: 1, display: workoutMinimized ? 'none' : 'flex' }}>
+                <WorkoutScreen
+                  workoutId={activeWorkoutId}
+                  onComplete={() => { setActiveWorkoutId(null); setWorkoutMinimized(false); }}
+                  onBack={() => { setActiveWorkoutId(null); setWorkoutMinimized(false); }}
+                  onMinimize={() => setWorkoutMinimized(true)}
+                />
+              </View>
+            )}
+          </View>
         )}
       </NavigationContainer>
 
@@ -225,6 +245,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#0f172a',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  resumePill: {
+    position: 'absolute',
+    bottom: 70, // just above the tab bar
+    left: 16,
+    right: 16,
+    backgroundColor: '#4f46e5',
+    borderRadius: 16,
+    padding: 14,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  resumePillText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
   },
   modalBackdrop: {
     flex: 1,
