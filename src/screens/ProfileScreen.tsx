@@ -12,6 +12,7 @@ import {
 import { getUserProfile, getUserGoals, signOut, supabase } from '../services/supabase';
 import type { User, Goal, FitnessGoal, ExperienceLevel } from '../types';
 import { useWeightUnit, convertWeight, toStorageLbs } from '../hooks/useWeightUnit';
+import { colors, fontSize as fs, radius, spacing, fontWeight } from '../theme';
 
 interface Props {
   userId: string;
@@ -19,7 +20,7 @@ interface Props {
   onConnectWhoop: () => void;
 }
 
-// ─── Chip selector (reused from onboarding) ───────────────────────────────────
+// ─── Chip selector ────────────────────────────────────────────────────────────
 function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (
     <TouchableOpacity
@@ -32,10 +33,19 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
   );
 }
 const cs = StyleSheet.create({
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: '#334155', backgroundColor: '#1e293b', marginRight: 8, marginBottom: 8 },
-  chipActive: { borderColor: '#6366f1', backgroundColor: '#1e1b4b' },
-  chipText: { color: '#64748b', fontSize: 14, fontWeight: '600' },
-  chipTextActive: { color: '#e0e7ff' },
+  chip: {
+    paddingHorizontal: spacing[14],
+    paddingVertical: spacing[8],
+    borderRadius: radius['4xl'],
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    marginRight: spacing[8],
+    marginBottom: spacing[8],
+  },
+  chipActive: { borderColor: colors.primary, backgroundColor: colors.indigoDark },
+  chipText: { color: colors.textMuted, fontSize: fs.md, fontWeight: fontWeight.semibold },
+  chipTextActive: { color: colors.indigoLight },
 });
 
 function ChipRow<T extends string>({
@@ -48,7 +58,7 @@ function ChipRow<T extends string>({
   onSelect: (v: T) => void;
 }) {
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 4 }}>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: spacing[4] }}>
       {options.map((o) => (
         <Chip key={o.value} label={o.label} active={selected === o.value} onPress={() => onSelect(o.value)} />
       ))}
@@ -72,10 +82,18 @@ function UnitToggle({ unit, onToggle }: { unit: 'kg' | 'lbs'; onToggle: () => vo
   );
 }
 const utStyles = StyleSheet.create({
-  pill: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', borderRadius: 8, borderWidth: 1, borderColor: '#334155', overflow: 'hidden' },
-  opt: { paddingHorizontal: 10, paddingVertical: 4, fontSize: 13, fontWeight: '700', color: '#64748b' },
-  optActive: { color: '#6366f1' },
-  divider: { width: 1, height: '100%', backgroundColor: '#334155' },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  opt: { paddingHorizontal: spacing[10], paddingVertical: spacing[4], fontSize: fs.base, fontWeight: fontWeight.bold, color: colors.textMuted },
+  optActive: { color: colors.primary },
+  divider: { width: 1, height: '100%', backgroundColor: colors.border },
 });
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -88,7 +106,6 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
   const [saveError, setSaveError] = useState<string | null>(null);
   const { unit, toggle } = useWeightUnit();
 
-  // Edit state mirrors user fields
   const [editGoal, setEditGoal] = useState<FitnessGoal>('general');
   const [editExp, setEditExp] = useState<ExperienceLevel>('intermediate');
   const [editFreq, setEditFreq] = useState('3-4');
@@ -104,7 +121,6 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
       const [u, g] = await Promise.all([getUserProfile(userId), getUserGoals(userId)]);
       setUser(u);
       setGoals(g);
-      // Populate edit fields
       setEditGoal((u?.fitness_goal as FitnessGoal) ?? 'general');
       setEditExp((u?.experience_level as ExperienceLevel) ?? 'intermediate');
       const freq = u?.workout_frequency;
@@ -114,7 +130,6 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
         else if (freq <= 6) setEditFreq('5-6');
         else setEditFreq('7');
       }
-      // current_weight and target_weight are stored in lbs — display in chosen unit
       const cw = u?.current_weight ? convertWeight(u.current_weight, unit) : null;
       const tw = u?.target_weight ? convertWeight(u.target_weight, unit) : null;
       setEditWeight(cw?.toString() ?? '');
@@ -131,7 +146,6 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
     setSaving(true);
     setSaveError(null);
     try {
-      // Convert entered weights back to lbs for storage
       const cwLbs = editWeight ? toStorageLbs(parseFloat(editWeight), unit) : null;
       const twLbs = editTargetWeight ? toStorageLbs(parseFloat(editTargetWeight), unit) : null;
 
@@ -160,7 +174,6 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
   function handleCancelEdit() {
     setEditing(false);
     setSaveError(null);
-    // reset fields back to current user data
     setEditGoal((user?.fitness_goal as FitnessGoal) ?? 'general');
     setEditExp((user?.experience_level as ExperienceLevel) ?? 'intermediate');
     const freq = user?.workout_frequency;
@@ -176,10 +189,9 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
   }
 
   async function handleSignOut() {
-    // Use window.confirm on web since Alert doesn't work
     const confirmed = Platform.OS === 'web'
       ? window.confirm('Sign out of AdaptiTrain?')
-      : true; // on native we'd show Alert — for now just sign out directly
+      : true;
 
     if (!confirmed) return;
 
@@ -187,7 +199,6 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
       await signOut();
       onSignOut();
     } catch {
-      // Sign out anyway — clear state
       onSignOut();
     }
   }
@@ -215,7 +226,7 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color="#6366f1" size="large" />
+        <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
   }
@@ -224,7 +235,7 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Profile</Text>
 
-      {/* ── Account info ── */}
+      {/* Account info */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
         <View style={styles.card}>
@@ -232,11 +243,11 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
         </View>
       </View>
 
-      {/* ── Fitness profile ── */}
+      {/* Fitness profile */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Fitness Profile</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[12] }}>
             <UnitToggle unit={unit} onToggle={toggle} />
             {!editing ? (
               <TouchableOpacity onPress={() => setEditing(true)}>
@@ -291,13 +302,13 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
               <Text style={styles.editLabel}>Goal</Text>
               <ChipRow options={goalOpts} selected={editGoal} onSelect={setEditGoal} />
 
-              <Text style={[styles.editLabel, { marginTop: 14 }]}>Experience level</Text>
+              <Text style={[styles.editLabel, { marginTop: spacing[14] }]}>Experience level</Text>
               <ChipRow options={expOpts} selected={editExp} onSelect={setEditExp} />
 
-              <Text style={[styles.editLabel, { marginTop: 14 }]}>Training frequency</Text>
+              <Text style={[styles.editLabel, { marginTop: spacing[14] }]}>Training frequency</Text>
               <ChipRow options={freqOpts} selected={editFreq} onSelect={setEditFreq} />
 
-              <View style={[styles.row, { marginTop: 14, alignItems: 'center', marginBottom: 8 }]}>
+              <View style={[styles.row, { marginTop: spacing[14], alignItems: 'center', marginBottom: spacing[8] }]}>
                 <Text style={[styles.editLabel, { marginBottom: 0, flex: 1 }]}>Weight</Text>
                 <UnitToggle unit={unit} onToggle={toggle} />
               </View>
@@ -306,7 +317,7 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
                   <TextInput
                     style={styles.editInput}
                     placeholder="Current"
-                    placeholderTextColor="#475569"
+                    placeholderTextColor={colors.textPlaceholder}
                     value={editWeight}
                     onChangeText={setEditWeight}
                     keyboardType="decimal-pad"
@@ -317,7 +328,7 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
                   <TextInput
                     style={styles.editInput}
                     placeholder="Target"
-                    placeholderTextColor="#475569"
+                    placeholderTextColor={colors.textPlaceholder}
                     value={editTargetWeight}
                     onChangeText={setEditTargetWeight}
                     keyboardType="decimal-pad"
@@ -325,11 +336,11 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
                 </View>
               </View>
 
-              <Text style={[styles.editLabel, { marginTop: 14 }]}>Injuries / limitations</Text>
+              <Text style={[styles.editLabel, { marginTop: spacing[14] }]}>Injuries / limitations</Text>
               <TextInput
                 style={[styles.editInput, { height: 72 }]}
                 placeholder="e.g. bad knees — or leave blank"
-                placeholderTextColor="#475569"
+                placeholderTextColor={colors.textPlaceholder}
                 value={editInjuries}
                 onChangeText={setEditInjuries}
                 multiline
@@ -339,7 +350,7 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
         </View>
       </View>
 
-      {/* ── Goals ── */}
+      {/* Goals */}
       {goals.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Goals</Text>
@@ -357,15 +368,18 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
         </View>
       )}
 
-      {/* ── Whoop ── */}
+      {/* Whoop */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Whoop</Text>
         <View style={styles.card}>
           <View style={styles.whoopRow}>
             <View style={styles.flex1}>
-              <Text style={[styles.whoopStatus, { color: whoopConnected ? '#22c55e' : '#f87171' }]}>
-                {whoopConnected ? '● Connected' : '● Not connected'}
-              </Text>
+              <View style={styles.whoopStatusRow}>
+                <View style={[styles.whoopDot, { backgroundColor: whoopConnected ? colors.success : colors.errorLight }]} />
+                <Text style={[styles.whoopStatus, { color: whoopConnected ? colors.success : colors.errorLight }]}>
+                  {whoopConnected ? 'Connected' : 'Not connected'}
+                </Text>
+              </View>
               <Text style={styles.whoopSub}>
                 {whoopConnected ? 'Recovery & sleep data syncing' : 'Connect to enable AI-powered workouts'}
               </Text>
@@ -377,12 +391,12 @@ export default function ProfileScreen({ userId, onSignOut, onConnectWhoop }: Pro
         </View>
       </View>
 
-      {/* ── Sign out ── */}
+      {/* Sign out */}
       <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.8}>
         <Text style={styles.signOutText}>Sign Out</Text>
       </TouchableOpacity>
 
-      <View style={{ height: 40 }} />
+      <View style={{ height: spacing[40] }} />
     </ScrollView>
   );
 }
@@ -416,66 +430,68 @@ function capitalize(s: string): string {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f172a' },
-  content: { padding: 20, paddingTop: 56, paddingBottom: 60 },
-  centered: { flex: 1, backgroundColor: '#0f172a', justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 28, fontWeight: '800', color: '#f8fafc', marginBottom: 24 },
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: spacing[20], paddingTop: spacing[56], paddingBottom: 60 },
+  centered: { flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' },
+  title: { fontSize: fs['6xl'], fontWeight: fontWeight.extrabold, color: colors.textPrimary, marginBottom: spacing[24] },
 
-  section: { marginBottom: 24 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 },
-  editBtn: { color: '#6366f1', fontSize: 15, fontWeight: '700' },
-  cancelBtn: { color: '#64748b', fontSize: 15, fontWeight: '600', marginRight: 16 },
+  section: { marginBottom: spacing[24] },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[10] },
+  sectionTitle: { fontSize: fs.base, fontWeight: fontWeight.bold, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 },
+  editBtn: { color: colors.primary, fontSize: fs.lg, fontWeight: fontWeight.bold },
+  cancelBtn: { color: colors.textMuted, fontSize: fs.lg, fontWeight: fontWeight.semibold, marginRight: spacing[16] },
   editActions: { flexDirection: 'row', alignItems: 'center' },
 
   errorBox: {
-    backgroundColor: '#2d1515',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
+    backgroundColor: colors.errorDeeper,
+    borderRadius: radius.lg,
+    padding: spacing[12],
+    marginBottom: spacing[12],
     borderLeftWidth: 3,
-    borderLeftColor: '#ef4444',
+    borderLeftColor: colors.error,
   },
-  errorText: { color: '#fca5a5', fontSize: 13 },
+  errorText: { color: colors.errorLighter, fontSize: fs.base },
 
-  card: { backgroundColor: '#1e293b', borderRadius: 16, padding: 16 },
+  card: { backgroundColor: colors.surface, borderRadius: radius['3xl'], padding: spacing[16] },
 
-  rowWrap: { paddingVertical: 6 },
-  rowLabel: { fontSize: 12, color: '#64748b', marginBottom: 2 },
-  rowValue: { fontSize: 15, color: '#f8fafc', fontWeight: '500' },
-  divider: { height: 1, backgroundColor: '#334155', marginVertical: 8 },
+  rowWrap: { paddingVertical: spacing[6] },
+  rowLabel: { fontSize: fs.sm, color: colors.textMuted, marginBottom: 2 },
+  rowValue: { fontSize: fs.lg, color: colors.textPrimary, fontWeight: fontWeight.regular },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing[8] },
 
-  editLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 8 },
+  editLabel: { fontSize: fs.sm, color: colors.textSecondary, fontWeight: fontWeight.bold, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: spacing[8] },
   editInput: {
-    backgroundColor: '#0f172a',
-    borderRadius: 10,
-    padding: 12,
-    color: '#f8fafc',
-    fontSize: 15,
+    backgroundColor: colors.background,
+    borderRadius: radius.lg,
+    padding: spacing[12],
+    color: colors.textPrimary,
+    fontSize: fs.lg,
     borderWidth: 1,
-    borderColor: '#334155',
-    marginBottom: 4,
+    borderColor: colors.border,
+    marginBottom: spacing[4],
   },
   row: { flexDirection: 'row' },
   flex1: { flex: 1 },
 
-  goalCard: { backgroundColor: '#1e293b', borderRadius: 14, padding: 14, marginBottom: 8 },
-  goalDesc: { color: '#f8fafc', fontSize: 15, fontWeight: '600', marginBottom: 4 },
-  progressText: { color: '#64748b', fontSize: 13 },
+  goalCard: { backgroundColor: colors.surface, borderRadius: radius['2xl'], padding: spacing[14], marginBottom: spacing[8] },
+  goalDesc: { color: colors.textPrimary, fontSize: fs.lg, fontWeight: fontWeight.semibold, marginBottom: spacing[4] },
+  progressText: { color: colors.textMuted, fontSize: fs.base },
 
   whoopRow: { flexDirection: 'row', alignItems: 'center' },
-  whoopStatus: { fontSize: 15, fontWeight: '600', marginBottom: 2 },
-  whoopSub: { fontSize: 13, color: '#64748b' },
-  whoopBtn: { backgroundColor: '#6366f1', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8 },
-  whoopBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  whoopStatusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[6], marginBottom: 2 },
+  whoopDot: { width: 8, height: 8, borderRadius: 4 },
+  whoopStatus: { fontSize: fs.lg, fontWeight: fontWeight.semibold },
+  whoopSub: { fontSize: fs.base, color: colors.textMuted },
+  whoopBtn: { backgroundColor: colors.primary, borderRadius: radius.lg, paddingHorizontal: spacing[16], paddingVertical: spacing[8] },
+  whoopBtnText: { color: colors.textPrimary, fontWeight: fontWeight.bold, fontSize: fs.md },
 
   signOutBtn: {
-    backgroundColor: '#1e293b',
-    borderRadius: 14,
-    padding: 16,
+    backgroundColor: colors.surface,
+    borderRadius: radius['2xl'],
+    padding: spacing[16],
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ef4444',
+    borderColor: colors.error,
   },
-  signOutText: { color: '#ef4444', fontSize: 16, fontWeight: '700' },
+  signOutText: { color: colors.error, fontSize: fs.xl, fontWeight: fontWeight.bold },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,14 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
-  Alert,
   Modal,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { getWorkoutWithExercises, updateWorkout, updateExercise } from '../services/supabase';
 import ExerciseItem from '../components/ExerciseItem';
 import type { Workout, Exercise } from '../types';
 import { useWeightUnit } from '../hooks/useWeightUnit';
+import { colors, fontSize as fs, radius, spacing, fontWeight } from '../theme';
 
 interface Props {
   workoutId: string;
@@ -70,10 +71,6 @@ export default function WorkoutScreen({ workoutId, onComplete, onBack, onMinimiz
     await updateExercise(exerciseId, updates);
   }
 
-  async function handleFinish() {
-    setShowRPEModal(true);
-  }
-
   async function submitWorkout() {
     const durationMinutes = Math.round(elapsed / 60);
     await updateWorkout(workoutId, {
@@ -101,7 +98,7 @@ export default function WorkoutScreen({ workoutId, onComplete, onBack, onMinimiz
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.headerSideBtn}>
-          <Text style={styles.backBtn}>✕</Text>
+          <Ionicons name="close" size={20} color={colors.primary} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.workoutType}>{workout.workout_type}</Text>
@@ -112,9 +109,9 @@ export default function WorkoutScreen({ workoutId, onComplete, onBack, onMinimiz
             <Text style={styles.unitToggleText}>{unit === 'kg' ? 'kg' : 'lbs'}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.minimizeBtn} onPress={onMinimize} activeOpacity={0.7}>
-            <Text style={styles.minimizeBtnText}>⤵</Text>
+            <Ionicons name="chevron-down-circle-outline" size={22} color={colors.textMuted} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.finishBtn} onPress={handleFinish}>
+          <TouchableOpacity style={styles.finishBtn} onPress={() => setShowRPEModal(true)}>
             <Text style={styles.finishBtnText}>Finish</Text>
           </TouchableOpacity>
         </View>
@@ -165,7 +162,7 @@ export default function WorkoutScreen({ workoutId, onComplete, onBack, onMinimiz
             <TextInput
               style={styles.notesInput}
               placeholder="Any notes? (optional)"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={colors.textMuted}
               value={notes}
               onChangeText={setNotes}
               multiline
@@ -181,55 +178,60 @@ export default function WorkoutScreen({ workoutId, onComplete, onBack, onMinimiz
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f172a' },
-  loading: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f172a' },
-  loadingText: { color: '#94a3b8', fontSize: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  loading: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
+  loadingText: { color: colors.textSecondary, fontSize: fs.xl },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    paddingTop: 56,
-    backgroundColor: '#1e293b',
+    padding: spacing[16],
+    paddingTop: spacing[56],
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: colors.border,
   },
   headerSideBtn: { width: 36, alignItems: 'center' },
-  backBtn: { color: '#6366f1', fontSize: 16, fontWeight: '600' },
   headerCenter: { alignItems: 'center', flex: 1 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  workoutType: { color: '#f8fafc', fontSize: 14, fontWeight: '600' },
-  elapsed: { color: '#6366f1', fontSize: 22, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  unitToggle: { backgroundColor: '#0f172a', borderRadius: 8, borderWidth: 1, borderColor: '#334155', paddingHorizontal: 10, paddingVertical: 6 },
-  unitToggleText: { color: '#94a3b8', fontSize: 13, fontWeight: '700' },
-  minimizeBtn: { padding: 6 },
-  minimizeBtnText: { color: '#64748b', fontSize: 18 },
-  finishBtn: { backgroundColor: '#6366f1', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8 },
-  finishBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing[8] },
+  workoutType: { color: colors.textPrimary, fontSize: fs.md, fontWeight: fontWeight.semibold },
+  elapsed: { color: colors.primary, fontSize: fs['4xl'], fontWeight: fontWeight.extrabold, fontVariant: ['tabular-nums'] },
+  unitToggle: {
+    backgroundColor: colors.background,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing[10],
+    paddingVertical: spacing[6],
+  },
+  unitToggleText: { color: colors.textSecondary, fontSize: fs.base, fontWeight: fontWeight.bold },
+  minimizeBtn: { padding: spacing[6] },
+  finishBtn: { backgroundColor: colors.primary, borderRadius: radius.lg, paddingHorizontal: spacing[16], paddingVertical: spacing[8] },
+  finishBtnText: { color: colors.textPrimary, fontWeight: fontWeight.bold, fontSize: fs.lg },
   restBanner: {
-    backgroundColor: '#0f4c75',
+    backgroundColor: colors.restBlue,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 12,
-    paddingHorizontal: 20,
+    padding: spacing[12],
+    paddingHorizontal: spacing[20],
   },
-  restBannerText: { color: '#bae6fd', fontSize: 16, fontWeight: '700' },
-  restSkip: { color: '#64748b', fontSize: 14 },
-  scroll: { padding: 16, paddingBottom: 40 },
-  reasoningCard: { backgroundColor: '#1e293b', borderRadius: 14, padding: 16, marginBottom: 16 },
-  reasoningTitle: { color: '#6366f1', fontSize: 13, fontWeight: '700', marginBottom: 6 },
-  reasoningText: { color: '#94a3b8', fontSize: 14, lineHeight: 20 },
+  restBannerText: { color: colors.restBlueLight, fontSize: fs.xl, fontWeight: fontWeight.bold },
+  restSkip: { color: colors.textMuted, fontSize: fs.md },
+  scroll: { padding: spacing[16], paddingBottom: spacing[40] },
+  reasoningCard: { backgroundColor: colors.surface, borderRadius: radius['2xl'], padding: spacing[16], marginBottom: spacing[16] },
+  reasoningTitle: { color: colors.primary, fontSize: fs.base, fontWeight: fontWeight.bold, marginBottom: spacing[6] },
+  reasoningText: { color: colors.textSecondary, fontSize: fs.md, lineHeight: 20 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modal: { backgroundColor: '#1e293b', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 },
-  modalTitle: { fontSize: 22, fontWeight: '800', color: '#f8fafc', marginBottom: 8 },
-  modalSubtitle: { fontSize: 14, color: '#64748b', marginBottom: 20 },
-  rpeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  rpeBtn: { width: 44, height: 44, borderRadius: 10, borderWidth: 1, borderColor: '#334155', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f172a' },
-  rpeBtnSelected: { backgroundColor: '#6366f1', borderColor: '#6366f1' },
-  rpeBtnText: { color: '#94a3b8', fontSize: 15, fontWeight: '700' },
-  rpeBtnTextSelected: { color: '#fff' },
-  notesInput: { backgroundColor: '#0f172a', borderRadius: 12, padding: 14, color: '#f8fafc', fontSize: 15, borderWidth: 1, borderColor: '#334155', height: 80, marginBottom: 16 },
-  submitBtn: { backgroundColor: '#6366f1', borderRadius: 14, padding: 18, alignItems: 'center' },
-  submitBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  modal: { backgroundColor: colors.surface, borderTopLeftRadius: radius['5xl'], borderTopRightRadius: radius['5xl'], padding: spacing[24] },
+  modalTitle: { fontSize: fs['4xl'], fontWeight: fontWeight.extrabold, color: colors.textPrimary, marginBottom: spacing[8] },
+  modalSubtitle: { fontSize: fs.md, color: colors.textMuted, marginBottom: spacing[20] },
+  rpeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[8], marginBottom: spacing[20] },
+  rpeBtn: { width: 44, height: 44, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+  rpeBtnSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  rpeBtnText: { color: colors.textSecondary, fontSize: fs.lg, fontWeight: fontWeight.bold },
+  rpeBtnTextSelected: { color: colors.textPrimary },
+  notesInput: { backgroundColor: colors.background, borderRadius: radius.xl, padding: spacing[14], color: colors.textPrimary, fontSize: fs.lg, borderWidth: 1, borderColor: colors.border, height: 80, marginBottom: spacing[16] },
+  submitBtn: { backgroundColor: colors.primary, borderRadius: radius['2xl'], padding: spacing[18], alignItems: 'center' },
+  submitBtnText: { color: colors.textPrimary, fontSize: fs.xl, fontWeight: fontWeight.bold },
 });

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { Exercise } from '../types';
 import { useWeightUnit } from '../hooks/useWeightUnit';
+import { colors, fontSize as fs, radius, spacing, fontWeight } from '../theme';
 
 interface Props {
   exercise: Exercise;
@@ -19,7 +21,6 @@ export default function ExerciseItem({ exercise, index, onUpdate, onStartRest }:
   const [done, setDone] = useState(false);
   const { unit, convertWeightString } = useWeightUnit();
 
-  // Convert planned weight for display
   const displayPlannedWeight = exercise.planned_weight ? convertWeightString(exercise.planned_weight) : null;
 
   function handleComplete() {
@@ -31,11 +32,7 @@ export default function ExerciseItem({ exercise, index, onUpdate, onStartRest }:
     };
     onUpdate(updates);
     setDone(true);
-
-    // Parse rest time from string like "90 seconds"
-    const restMatch = exercise.planned_reps;
-    const seconds = 90; // default rest
-    onStartRest(seconds);
+    onStartRest(90);
   }
 
   return (
@@ -43,7 +40,9 @@ export default function ExerciseItem({ exercise, index, onUpdate, onStartRest }:
       <TouchableOpacity style={styles.header} onPress={() => setExpanded(!expanded)}>
         <View style={styles.headerLeft}>
           <View style={[styles.indexBadge, done && styles.indexBadgeDone]}>
-            {done ? <Text style={styles.checkmark}>✓</Text> : <Text style={styles.indexText}>{index + 1}</Text>}
+            {done
+              ? <Ionicons name="checkmark" size={16} color={colors.success} />
+              : <Text style={styles.indexText}>{index + 1}</Text>}
           </View>
           <View>
             <Text style={[styles.name, done && styles.nameDone]}>{exercise.exercise_name}</Text>
@@ -53,7 +52,11 @@ export default function ExerciseItem({ exercise, index, onUpdate, onStartRest }:
             </Text>
           </View>
         </View>
-        <Text style={styles.chevron}>{expanded ? '▲' : '▼'}</Text>
+        <Ionicons
+          name={expanded ? 'chevron-up' : 'chevron-down'}
+          size={16}
+          color={colors.textMuted}
+        />
       </TouchableOpacity>
 
       {expanded && !done && (
@@ -67,7 +70,7 @@ export default function ExerciseItem({ exercise, index, onUpdate, onStartRest }:
                 onChangeText={setCompletedSets}
                 keyboardType="numeric"
                 placeholder={exercise.planned_sets?.toString() ?? '—'}
-                placeholderTextColor="#475569"
+                placeholderTextColor={colors.textPlaceholder}
               />
             </View>
             <View style={styles.inputGroup}>
@@ -77,7 +80,7 @@ export default function ExerciseItem({ exercise, index, onUpdate, onStartRest }:
                 value={completedReps}
                 onChangeText={setCompletedReps}
                 placeholder={exercise.planned_reps ?? '—'}
-                placeholderTextColor="#475569"
+                placeholderTextColor={colors.textPlaceholder}
               />
             </View>
             <View style={styles.inputGroup}>
@@ -87,7 +90,7 @@ export default function ExerciseItem({ exercise, index, onUpdate, onStartRest }:
                 value={completedWeight}
                 onChangeText={setCompletedWeight}
                 placeholder={displayPlannedWeight ?? 'BW'}
-                placeholderTextColor="#475569"
+                placeholderTextColor={colors.textPlaceholder}
               />
             </View>
           </View>
@@ -97,11 +100,12 @@ export default function ExerciseItem({ exercise, index, onUpdate, onStartRest }:
             value={notes}
             onChangeText={setNotes}
             placeholder="Notes (optional)"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textPlaceholder}
           />
 
           <TouchableOpacity style={styles.completeBtn} onPress={handleComplete}>
-            <Text style={styles.completeBtnText}>✓ Complete & Start Rest</Text>
+            <Ionicons name="checkmark" size={16} color={colors.success} style={{ marginRight: spacing[6] }} />
+            <Text style={styles.completeBtnText}>Complete & Start Rest</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -110,42 +114,61 @@ export default function ExerciseItem({ exercise, index, onUpdate, onStartRest }:
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: '#1e293b', borderRadius: 14, marginBottom: 10, overflow: 'hidden', borderWidth: 1, borderColor: '#334155' },
-  containerDone: { opacity: 0.6, borderColor: '#22c55e' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  indexBadge: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#334155', alignItems: 'center', justifyContent: 'center' },
-  indexBadgeDone: { backgroundColor: '#166534' },
-  indexText: { color: '#94a3b8', fontSize: 14, fontWeight: '700' },
-  checkmark: { color: '#22c55e', fontSize: 16, fontWeight: '700' },
-  name: { color: '#f8fafc', fontSize: 15, fontWeight: '700' },
-  nameDone: { color: '#64748b' },
-  planned: { color: '#64748b', fontSize: 13, marginTop: 2 },
-  chevron: { color: '#64748b', fontSize: 12 },
-  body: { padding: 14, paddingTop: 0 },
-  inputRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
-  inputGroup: { flex: 1 },
-  inputLabel: { color: '#64748b', fontSize: 12, marginBottom: 4 },
-  input: {
-    backgroundColor: '#0f172a',
-    borderRadius: 8,
-    padding: 10,
-    color: '#f8fafc',
-    fontSize: 14,
+  container: {
+    backgroundColor: colors.surface,
+    borderRadius: radius['2xl'],
+    marginBottom: spacing[10],
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: colors.border,
+  },
+  containerDone: { opacity: 0.6, borderColor: colors.success },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing[14] },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing[12], flex: 1 },
+  indexBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: radius['3xl'],
+    backgroundColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  indexBadgeDone: { backgroundColor: colors.successDark },
+  indexText: { color: colors.textSecondary, fontSize: fs.md, fontWeight: fontWeight.bold },
+  name: { color: colors.textPrimary, fontSize: fs.lg, fontWeight: fontWeight.bold },
+  nameDone: { color: colors.textMuted },
+  planned: { color: colors.textMuted, fontSize: fs.base, marginTop: 2 },
+  body: { padding: spacing[14], paddingTop: 0 },
+  inputRow: { flexDirection: 'row', gap: spacing[8], marginBottom: spacing[10] },
+  inputGroup: { flex: 1 },
+  inputLabel: { color: colors.textMuted, fontSize: fs.sm, marginBottom: spacing[4] },
+  input: {
+    backgroundColor: colors.inputBg,
+    borderRadius: radius.md,
+    padding: spacing[10],
+    color: colors.textPrimary,
+    fontSize: fs.md,
+    borderWidth: 1,
+    borderColor: colors.border,
     textAlign: 'center',
   },
   notesInput: {
-    backgroundColor: '#0f172a',
-    borderRadius: 8,
-    padding: 10,
-    color: '#f8fafc',
-    fontSize: 14,
+    backgroundColor: colors.inputBg,
+    borderRadius: radius.md,
+    padding: spacing[10],
+    color: colors.textPrimary,
+    fontSize: fs.md,
     borderWidth: 1,
-    borderColor: '#334155',
-    marginBottom: 10,
+    borderColor: colors.border,
+    marginBottom: spacing[10],
   },
-  completeBtn: { backgroundColor: '#166534', borderRadius: 10, padding: 12, alignItems: 'center' },
-  completeBtnText: { color: '#22c55e', fontWeight: '700', fontSize: 14 },
+  completeBtn: {
+    backgroundColor: colors.successDark,
+    borderRadius: radius.lg,
+    padding: spacing[12],
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  completeBtnText: { color: colors.success, fontWeight: fontWeight.bold, fontSize: fs.md },
 });

@@ -4,6 +4,9 @@ import {
   RefreshControl, Modal, TextInput, ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, fontSize as fs, radius, spacing, fontWeight } from '../theme';
+import { SkeletonBox } from '../components/SkeletonBox';
 import { supabase, getUserWorkouts, insertWorkout, insertExercises, updateWorkout } from '../services/supabase';
 import type { Workout } from '../types';
 
@@ -28,19 +31,21 @@ function StatusPill({ workout, onUpdate }: {
     setBusy(false);
   }
 
-  if (busy) return <ActivityIndicator size="small" color="#6366f1" style={{ width: 80 }} />;
+  if (busy) return <ActivityIndicator size="small" color={colors.primary} style={{ width: 80 }} />;
 
   if (workout.completed) {
     return (
       <TouchableOpacity style={pill.done} onPress={() => set(false, false)} activeOpacity={0.75}>
-        <Text style={pill.doneText}>✓ Done</Text>
+        <Ionicons name="checkmark" size={13} color={colors.success} />
+        <Text style={pill.doneText}> Done</Text>
       </TouchableOpacity>
     );
   }
   if (workout.skipped) {
     return (
       <TouchableOpacity style={pill.skip} onPress={() => set(false, false)} activeOpacity={0.75}>
-        <Text style={pill.skipText}>✕ Skipped</Text>
+        <Ionicons name="close" size={13} color={colors.error} />
+        <Text style={pill.skipText}> Skipped</Text>
       </TouchableOpacity>
     );
   }
@@ -48,25 +53,25 @@ function StatusPill({ workout, onUpdate }: {
   return (
     <View style={pill.row}>
       <TouchableOpacity style={pill.doneBtn} onPress={() => set(true, false)} activeOpacity={0.75}>
-        <Text style={pill.doneBtnText}>✓</Text>
+        <Ionicons name="checkmark" size={14} color={colors.success} />
       </TouchableOpacity>
       <TouchableOpacity style={pill.skipBtn} onPress={() => set(false, true)} activeOpacity={0.75}>
-        <Text style={pill.skipBtnText}>✕</Text>
+        <Ionicons name="close" size={14} color={colors.error} />
       </TouchableOpacity>
     </View>
   );
 }
 
 const pill = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 6 },
-  doneBtn: { backgroundColor: '#052e16', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: '#16a34a60' },
-  doneBtnText: { color: '#22c55e', fontSize: 13, fontWeight: '700' },
-  skipBtn: { backgroundColor: '#1c0f0f', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: '#ef444440' },
-  skipBtnText: { color: '#ef4444', fontSize: 13, fontWeight: '700' },
-  done: { backgroundColor: '#052e16', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: '#16a34a60' },
-  doneText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
-  skip: { backgroundColor: '#1c0f0f', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: '#ef444440' },
-  skipText: { color: '#ef4444', fontSize: 12, fontWeight: '700' },
+  row: { flexDirection: 'row', gap: spacing[6] },
+  doneBtn: { backgroundColor: colors.successDeep, borderRadius: radius.md, paddingHorizontal: spacing[10], paddingVertical: spacing[6], borderWidth: 1, borderColor: '#16a34a60', flexDirection: 'row', alignItems: 'center' },
+  doneBtnText: { color: colors.success, fontSize: fs.base, fontWeight: fontWeight.bold },
+  skipBtn: { backgroundColor: colors.errorDark, borderRadius: radius.md, paddingHorizontal: spacing[10], paddingVertical: spacing[6], borderWidth: 1, borderColor: '#ef444440', flexDirection: 'row', alignItems: 'center' },
+  skipBtnText: { color: colors.error, fontSize: fs.base, fontWeight: fontWeight.bold },
+  done: { backgroundColor: colors.successDeep, borderRadius: radius.md, paddingHorizontal: spacing[10], paddingVertical: spacing[6], borderWidth: 1, borderColor: '#16a34a60', flexDirection: 'row', alignItems: 'center' },
+  doneText: { color: colors.success, fontSize: fs.sm, fontWeight: fontWeight.bold },
+  skip: { backgroundColor: colors.errorDark, borderRadius: radius.md, paddingHorizontal: spacing[10], paddingVertical: spacing[6], borderWidth: 1, borderColor: '#ef444440', flexDirection: 'row', alignItems: 'center' },
+  skipText: { color: colors.error, fontSize: fs.sm, fontWeight: fontWeight.bold },
 });
 
 // ─── Workout detail / log modal ───────────────────────────────────────────────
@@ -135,7 +140,7 @@ function WorkoutDetailModal({ workout, onClose, onSave }: {
   }
 
   const statusLabel = workout.completed ? '✓ Completed' : workout.skipped ? '✕ Skipped' : '· Pending';
-  const statusColor = workout.completed ? '#22c55e' : workout.skipped ? '#ef4444' : '#eab308';
+  const statusColor = workout.completed ? colors.success : workout.skipped ? colors.error : colors.warning;
 
   return (
     <Modal visible animationType="slide" transparent onRequestClose={onClose}>
@@ -147,14 +152,14 @@ function WorkoutDetailModal({ workout, onClose, onSave }: {
           {/* Header */}
           <View style={dStyles.header}>
             <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[8], marginBottom: 3 }}>
                 <Text style={dStyles.title}>{workout.workout_type}</Text>
                 <Text style={[dStyles.statusTag, { color: statusColor }]}>{statusLabel}</Text>
               </View>
               <Text style={dStyles.date}>{formatDate(workout.date)}</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={dStyles.closeBtn}>
-              <Text style={dStyles.closeBtnText}>✕</Text>
+              <Ionicons name="close" size={16} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -241,7 +246,7 @@ function WorkoutDetailModal({ workout, onClose, onSave }: {
                       value={plainEnglish}
                       onChangeText={setPlainEnglish}
                       placeholder="How did it go? Any changes?"
-                      placeholderTextColor="#475569"
+                      placeholderTextColor={colors.textPlaceholder}
                       multiline
                       textAlignVertical="top"
                     />
@@ -258,7 +263,7 @@ function WorkoutDetailModal({ workout, onClose, onSave }: {
                       onChangeText={setDuration}
                       keyboardType="number-pad"
                       placeholder="e.g. 45"
-                      placeholderTextColor="#475569"
+                      placeholderTextColor={colors.textPlaceholder}
                     />
 
                     {/* Only show RPE if marking done */}
@@ -285,7 +290,7 @@ function WorkoutDetailModal({ workout, onClose, onSave }: {
                       value={notes}
                       onChangeText={setNotes}
                       placeholder="What went well? What changed? Why skipped?"
-                      placeholderTextColor="#475569"
+                      placeholderTextColor={colors.textPlaceholder}
                       multiline
                     />
                   </>
@@ -293,12 +298,13 @@ function WorkoutDetailModal({ workout, onClose, onSave }: {
 
                 {/* Action buttons */}
                 {saving ? (
-                  <ActivityIndicator color="#6366f1" style={{ marginTop: 8 }} />
+                  <ActivityIndicator color={colors.primary} style={{ marginTop: spacing[8] }} />
                 ) : (
                   <View style={dStyles.actionRow}>
                     {!workout.completed && (
                       <TouchableOpacity style={dStyles.completeBtn} onPress={() => handleSave(true, false)} activeOpacity={0.85}>
-                        <Text style={dStyles.completeBtnText}>✓ Mark Complete</Text>
+                        <Ionicons name="checkmark" size={14} color="#fff" style={{marginRight: 4}} />
+                        <Text style={dStyles.completeBtnText}>Mark Complete</Text>
                       </TouchableOpacity>
                     )}
                     {workout.completed && (
@@ -308,7 +314,8 @@ function WorkoutDetailModal({ workout, onClose, onSave }: {
                     )}
                     {!workout.skipped && !workout.completed && (
                       <TouchableOpacity style={dStyles.skipBtn} onPress={() => handleSave(false, true)} activeOpacity={0.85}>
-                        <Text style={dStyles.skipBtnText}>✕ Didn't Do It</Text>
+                        <Ionicons name="close" size={14} color={colors.error} style={{marginRight: 4}} />
+                        <Text style={dStyles.skipBtnText}>Didn't Do It</Text>
                       </TouchableOpacity>
                     )}
                     {(workout.completed || workout.skipped) && (
@@ -373,15 +380,15 @@ function AddWorkoutModal({ onClose, onSave }: {
           <View style={dStyles.header}>
             <Text style={dStyles.title}>Log Workout</Text>
             <TouchableOpacity onPress={onClose} style={dStyles.closeBtn}>
-              <Text style={dStyles.closeBtnText}>✕</Text>
+              <Ionicons name="close" size={16} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
             {/* Type chips */}
             <Text style={dStyles.logLabel}>Workout type</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing[16] }}>
+              <View style={{ flexDirection: 'row', gap: spacing[8] }}>
                 {WORKOUT_TYPES.map(t => (
                   <TouchableOpacity key={t} style={[dStyles.typeChip, type === t && dStyles.typeChipOn]} onPress={() => setType(t)}>
                     <Text style={[dStyles.typeChipText, type === t && dStyles.typeChipTextOn]}>{t}</Text>
@@ -391,20 +398,20 @@ function AddWorkoutModal({ onClose, onSave }: {
             </ScrollView>
 
             {/* Date + Duration */}
-            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+            <View style={{ flexDirection: 'row', gap: spacing[12], marginBottom: spacing[16] }}>
               <View style={{ flex: 1 }}>
                 <Text style={dStyles.logLabel}>Date</Text>
-                <TextInput style={dStyles.input} value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" placeholderTextColor="#475569" />
+                <TextInput style={dStyles.input} value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" placeholderTextColor={colors.textPlaceholder} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={dStyles.logLabel}>Duration (min)</Text>
-                <TextInput style={dStyles.input} value={duration} onChangeText={setDuration} keyboardType="number-pad" placeholder="45" placeholderTextColor="#475569" />
+                <TextInput style={dStyles.input} value={duration} onChangeText={setDuration} keyboardType="number-pad" placeholder="45" placeholderTextColor={colors.textPlaceholder} />
               </View>
             </View>
 
             {/* RPE */}
             <Text style={dStyles.logLabel}>RPE (1–10)</Text>
-            <View style={[dStyles.rpeRow, { marginBottom: 16 }]}>
+            <View style={[dStyles.rpeRow, { marginBottom: spacing[16] }]}>
               {[1,2,3,4,5,6,7,8,9,10].map(n => (
                 <TouchableOpacity key={n} style={[dStyles.rpeBtn, rpe === n && dStyles.rpeBtnOn]} onPress={() => setRpe(n)}>
                   <Text style={[dStyles.rpeBtnText, rpe === n && dStyles.rpeBtnTextOn]}>{n}</Text>
@@ -416,25 +423,25 @@ function AddWorkoutModal({ onClose, onSave }: {
             <Text style={dStyles.logLabel}>Exercises</Text>
             {exercises.map((ex, i) => (
               <View key={i} style={dStyles.exInput}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing[8] }}>
                   <Text style={dStyles.exInputNum}>{i + 1}</Text>
                   <TextInput
                     style={[dStyles.input, { flex: 1, marginBottom: 0 }]}
                     value={ex.name}
                     onChangeText={v => updateEx(i, 'name', v)}
                     placeholder="Exercise name"
-                    placeholderTextColor="#475569"
+                    placeholderTextColor={colors.textPlaceholder}
                   />
                   {exercises.length > 1 && (
-                    <TouchableOpacity onPress={() => removeEx(i)} style={{ marginLeft: 8 }}>
-                      <Text style={{ color: '#ef4444', fontSize: 18 }}>−</Text>
+                    <TouchableOpacity onPress={() => removeEx(i)} style={{ marginLeft: spacing[8] }}>
+                      <Text style={{ color: colors.error, fontSize: fs['2xl'] }}>−</Text>
                     </TouchableOpacity>
                   )}
                 </View>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <TextInput style={[dStyles.input, { flex: 1, marginBottom: 0 }]} value={ex.sets} onChangeText={v => updateEx(i, 'sets', v)} keyboardType="number-pad" placeholder="Sets" placeholderTextColor="#475569" />
-                  <TextInput style={[dStyles.input, { flex: 1, marginBottom: 0 }]} value={ex.reps} onChangeText={v => updateEx(i, 'reps', v)} placeholder="Reps" placeholderTextColor="#475569" />
-                  <TextInput style={[dStyles.input, { flex: 1.5, marginBottom: 0 }]} value={ex.weight} onChangeText={v => updateEx(i, 'weight', v)} placeholder="Weight" placeholderTextColor="#475569" />
+                <View style={{ flexDirection: 'row', gap: spacing[8] }}>
+                  <TextInput style={[dStyles.input, { flex: 1, marginBottom: 0 }]} value={ex.sets} onChangeText={v => updateEx(i, 'sets', v)} keyboardType="number-pad" placeholder="Sets" placeholderTextColor={colors.textPlaceholder} />
+                  <TextInput style={[dStyles.input, { flex: 1, marginBottom: 0 }]} value={ex.reps} onChangeText={v => updateEx(i, 'reps', v)} placeholder="Reps" placeholderTextColor={colors.textPlaceholder} />
+                  <TextInput style={[dStyles.input, { flex: 1.5, marginBottom: 0 }]} value={ex.weight} onChangeText={v => updateEx(i, 'weight', v)} placeholder="Weight" placeholderTextColor={colors.textPlaceholder} />
                 </View>
               </View>
             ))}
@@ -443,13 +450,13 @@ function AddWorkoutModal({ onClose, onSave }: {
             </TouchableOpacity>
 
             {/* Notes */}
-            <Text style={[dStyles.logLabel, { marginTop: 16 }]}>Notes (optional)</Text>
+            <Text style={[dStyles.logLabel, { marginTop: spacing[16] }]}>Notes (optional)</Text>
             <TextInput
               style={[dStyles.input, { height: 72, textAlignVertical: 'top' }]}
               value={notes}
               onChangeText={setNotes}
               placeholder="How did it go?"
-              placeholderTextColor="#475569"
+              placeholderTextColor={colors.textPlaceholder}
               multiline
             />
 
@@ -516,7 +523,7 @@ function InsightsBar({ workouts }: { workouts: Workout[] }) {
         </View>
         <View style={iStyles.divider} />
         <View style={iStyles.stat}>
-          <Text style={[iStyles.statNum, streak > 0 ? { color: '#fb923c' } : {}]}>{streak}d</Text>
+          <Text style={[iStyles.statNum, streak > 0 ? { color: colors.orange } : {}]}>{streak}d</Text>
           <Text style={iStyles.statLbl}>Streak</Text>
         </View>
         <View style={iStyles.divider} />
@@ -539,15 +546,15 @@ function InsightsBar({ workouts }: { workouts: Workout[] }) {
 }
 
 const iStyles = StyleSheet.create({
-  container: { marginHorizontal: 16, marginBottom: 12, backgroundColor: '#1e293b', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#334155' },
-  statsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  container: { marginHorizontal: spacing[16], marginBottom: spacing[12], backgroundColor: colors.surface, borderRadius: radius['3xl'], padding: spacing[14], borderWidth: 1, borderColor: colors.border },
+  statsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing[10] },
   stat: { flex: 1, alignItems: 'center' },
-  statNum: { fontSize: 20, fontWeight: '800', color: '#6366f1' },
-  statLbl: { fontSize: 10, color: '#64748b', marginTop: 2, textAlign: 'center' },
-  divider: { width: 1, height: 32, backgroundColor: '#334155' },
-  pills: { gap: 8, paddingRight: 4 },
-  pill: { backgroundColor: '#0f172a', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: '#334155' },
-  pillText: { color: '#94a3b8', fontSize: 12 },
+  statNum: { fontSize: fs['3xl'], fontWeight: fontWeight.extrabold, color: colors.primary },
+  statLbl: { fontSize: fs.xxs, color: colors.textMuted, marginTop: 2, textAlign: 'center' },
+  divider: { width: 1, height: 32, backgroundColor: colors.border },
+  pills: { gap: spacing[8], paddingRight: spacing[4] },
+  pill: { backgroundColor: colors.background, borderRadius: radius['4xl'], paddingHorizontal: spacing[12], paddingVertical: spacing[6], borderWidth: 1, borderColor: colors.border },
+  pillText: { color: colors.textSecondary, fontSize: fs.sm },
 });
 
 // ─── Main History Screen ──────────────────────────────────────────────────────
@@ -712,9 +719,15 @@ export default function HistoryScreen({ userId, onViewWorkout }: Props) {
 
       <ScrollView
         contentContainerStyle={styles.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {loading && <ActivityIndicator color="#6366f1" style={{ marginTop: 40 }} />}
+        {loading && workouts.length === 0 && (
+          <View style={{ paddingTop: spacing[8] }}>
+            {[0,1,2,3].map(i => (
+              <SkeletonBox key={i} height={80} borderRadius={radius['2xl']} style={{ marginBottom: spacing[8] }} />
+            ))}
+          </View>
+        )}
         {!loading && filtered.length === 0 && (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>📋</Text>
@@ -731,22 +744,26 @@ export default function HistoryScreen({ userId, onViewWorkout }: Props) {
           <View key={month}>
             <Text style={styles.monthLabel}>{month}</Text>
             {monthWorkouts.map(w => {
-              const dotColor = w.completed ? '#22c55e' : w.skipped ? '#ef4444' : '#64748b';
+              const dotColor = w.completed ? colors.success : w.skipped ? colors.error : colors.textMuted;
               return (
                 <View key={w.id} style={[styles.card, w.skipped && styles.cardSkipped]}>
                   <TouchableOpacity style={styles.cardBody} onPress={() => setSelected(w)} activeOpacity={0.7}>
                     <View style={[styles.statusDot, { backgroundColor: dotColor }]} />
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.cardType, w.skipped ? { color: '#64748b' } : {}]}>{w.workout_type}</Text>
+                      <Text style={[styles.cardType, w.skipped ? { color: colors.textMuted } : {}]}>{w.workout_type}</Text>
                       <Text style={styles.cardDate}>{shortDate(w.date)}</Text>
                       <View style={styles.cardMeta}>
-                        {w.duration_minutes ? <Text style={styles.metaTag}>⏱ {w.duration_minutes}m</Text> : null}
+                        {w.duration_minutes ? (
+                          <Text style={styles.metaTag}>
+                            <Ionicons name="timer-outline" size={11} color={colors.textMuted} /> {w.duration_minutes}m
+                          </Text>
+                        ) : null}
                         {w.rpe ? <Text style={styles.metaTag}>RPE {w.rpe}</Text> : null}
                         {w.exercises?.length ? <Text style={styles.metaTag}>{w.exercises.length} ex</Text> : null}
-                        {w.notes ? <Text style={styles.metaTag} numberOfLines={1}>📝 {w.notes.substring(0,28)}{w.notes.length > 28 ? '…' : ''}</Text> : null}
+                        {w.notes ? <Text style={styles.metaTag} numberOfLines={1}>{w.notes.substring(0,28)}{w.notes.length > 28 ? '…' : ''}</Text> : null}
                         {w.recovery_score_at_generation != null && (
                           <Text style={[styles.metaTag, { color: recoveryColor(w.recovery_score_at_generation) }]}>
-                            ⬤ {w.recovery_score_at_generation}%
+                            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: recoveryColor(w.recovery_score_at_generation) }} />{' '}{w.recovery_score_at_generation}%
                           </Text>
                         )}
                       </View>
@@ -788,93 +805,93 @@ function shortDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 function recoveryColor(score: number): string {
-  if (score >= 67) return '#22c55e';
-  if (score >= 34) return '#eab308';
-  return '#ef4444';
+  if (score >= 67) return colors.success;
+  if (score >= 34) return colors.warning;
+  return colors.error;
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f172a', paddingTop: 56 },
-  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 16 },
-  title: { fontSize: 28, fontWeight: '800', color: '#f8fafc' },
-  addBtn: { backgroundColor: '#6366f1', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
-  addBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  container: { flex: 1, backgroundColor: colors.background, paddingTop: spacing[56] },
+  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing[20], marginBottom: spacing[16] },
+  title: { fontSize: fs['6xl'], fontWeight: fontWeight.extrabold, color: colors.textPrimary },
+  addBtn: { backgroundColor: colors.primary, borderRadius: radius.lg, paddingHorizontal: spacing[14], paddingVertical: spacing[8] },
+  addBtnText: { color: '#fff', fontSize: fs.base, fontWeight: fontWeight.bold },
   filterScroll: { flexShrink: 0, flexGrow: 0 },
-  filterRow: { paddingHorizontal: 16, paddingBottom: 8, gap: 6, alignItems: 'center' },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#1e293b', borderWidth: 1, borderColor: '#334155' },
-  chipSelected: { backgroundColor: '#6366f1', borderColor: '#6366f1' },
-  chipType: { backgroundColor: '#0f172a' },
-  chipTypeSelected: { backgroundColor: '#312e81', borderColor: '#6366f1' },
-  chipText: { color: '#64748b', fontSize: 12, fontWeight: '600' },
+  filterRow: { paddingHorizontal: spacing[16], paddingBottom: spacing[8], gap: spacing[6], alignItems: 'center' },
+  chip: { paddingHorizontal: spacing[12], paddingVertical: spacing[6], borderRadius: radius['3xl'], backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipType: { backgroundColor: colors.background },
+  chipTypeSelected: { backgroundColor: colors.indigoDark, borderColor: colors.primary },
+  chipText: { color: colors.textMuted, fontSize: fs.sm, fontWeight: fontWeight.semibold },
   chipTextSelected: { color: '#fff' },
-  chipTypeTextSelected: { color: '#a5b4fc', fontWeight: '700' },
-  scroll: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 40 },
-  monthLabel: { fontSize: 11, fontWeight: '700', color: '#475569', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8, marginTop: 8, paddingHorizontal: 4 },
-  card: { backgroundColor: '#1e293b', borderRadius: 14, marginBottom: 8, borderWidth: 1, borderColor: '#334155', flexDirection: 'row', alignItems: 'center', overflow: 'hidden' },
+  chipTypeTextSelected: { color: '#a5b4fc', fontWeight: fontWeight.bold },
+  scroll: { paddingHorizontal: spacing[16], paddingTop: spacing[4], paddingBottom: 40 },
+  monthLabel: { fontSize: fs.xs, fontWeight: fontWeight.bold, color: colors.textPlaceholder, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: spacing[8], marginTop: spacing[8], paddingHorizontal: spacing[4] },
+  card: { backgroundColor: colors.surface, borderRadius: radius['2xl'], marginBottom: spacing[8], borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', overflow: 'hidden' },
   cardSkipped: { opacity: 0.6 },
-  cardBody: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', padding: 12 },
-  cardRight: { paddingRight: 12, paddingLeft: 4 },
-  statusDot: { width: 8, height: 8, borderRadius: 4, marginTop: 5, marginRight: 10, flexShrink: 0 },
-  cardType: { color: '#f8fafc', fontSize: 14, fontWeight: '700', marginBottom: 2 },
-  cardDate: { color: '#64748b', fontSize: 11, marginBottom: 5 },
-  cardMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  metaTag: { color: '#64748b', fontSize: 11, backgroundColor: '#0f172a', borderRadius: 5, paddingHorizontal: 6, paddingVertical: 2 },
+  cardBody: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', padding: spacing[12] },
+  cardRight: { paddingRight: spacing[12], paddingLeft: spacing[4] },
+  statusDot: { width: 8, height: 8, borderRadius: 4, marginTop: 5, marginRight: spacing[10], flexShrink: 0 },
+  cardType: { color: colors.textPrimary, fontSize: fs.md, fontWeight: fontWeight.bold, marginBottom: 2 },
+  cardDate: { color: colors.textMuted, fontSize: fs.xs, marginBottom: spacing[6] },
+  cardMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[6] },
+  metaTag: { color: colors.textMuted, fontSize: fs.xs, backgroundColor: colors.background, borderRadius: radius.sm, paddingHorizontal: spacing[6], paddingVertical: 2 },
   emptyState: { alignItems: 'center', paddingTop: 60 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyText: { color: '#64748b', fontSize: 16, marginBottom: 8 },
-  emptySubtext: { color: '#475569', fontSize: 14, textAlign: 'center', paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 48, marginBottom: spacing[16] },
+  emptyText: { color: colors.textMuted, fontSize: fs.xl, marginBottom: spacing[8] },
+  emptySubtext: { color: colors.textPlaceholder, fontSize: fs.md, textAlign: 'center', paddingHorizontal: spacing[32] },
 });
 
 const dStyles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#1e293b', borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '92%', padding: 20 },
-  handle: { width: 40, height: 4, backgroundColor: '#475569', borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
-  header: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 16 },
-  title: { fontSize: 18, fontWeight: '800', color: '#f8fafc' },
-  statusTag: { fontSize: 12, fontWeight: '700' },
-  date: { fontSize: 13, color: '#64748b', marginTop: 2 },
-  closeBtn: { backgroundColor: '#334155', borderRadius: 20, width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  closeBtnText: { color: '#94a3b8', fontSize: 14, fontWeight: '700' },
-  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 18, backgroundColor: '#0f172a', borderRadius: 14, padding: 12 },
+  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radius['5xl'], borderTopRightRadius: radius['5xl'], maxHeight: '92%', padding: spacing[20] },
+  handle: { width: 40, height: 4, backgroundColor: colors.textPlaceholder, borderRadius: radius.xs, alignSelf: 'center', marginBottom: spacing[16] },
+  header: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing[16] },
+  title: { fontSize: fs['2xl'], fontWeight: fontWeight.extrabold, color: colors.textPrimary },
+  statusTag: { fontSize: fs.sm, fontWeight: fontWeight.bold },
+  date: { fontSize: fs.base, color: colors.textMuted, marginTop: 2 },
+  closeBtn: { backgroundColor: colors.border, borderRadius: radius['4xl'], width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  closeBtnText: { color: colors.textSecondary, fontSize: fs.md, fontWeight: fontWeight.bold },
+  statsRow: { flexDirection: 'row', gap: spacing[10], marginBottom: spacing[18], backgroundColor: colors.background, borderRadius: radius['2xl'], padding: spacing[12] },
   stat: { flex: 1, alignItems: 'center' },
-  statValue: { fontSize: 18, fontWeight: '800', color: '#f8fafc' },
-  statLabel: { fontSize: 11, color: '#64748b', marginTop: 2 },
-  section: { marginBottom: 18 },
-  sectionTitle: { fontSize: 11, fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 },
-  reasoningText: { color: '#94a3b8', fontSize: 14, lineHeight: 22 },
-  exRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 },
-  exNum: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#334155', alignItems: 'center', justifyContent: 'center', marginRight: 10, marginTop: 2 },
-  exNumText: { color: '#94a3b8', fontSize: 12, fontWeight: '700' },
-  exName: { color: '#f8fafc', fontSize: 14, fontWeight: '600', marginBottom: 2 },
-  exMeta: { color: '#64748b', fontSize: 13 },
-  logSection: { backgroundColor: '#0f172a', borderRadius: 16, padding: 16, marginTop: 4, borderWidth: 1, borderColor: '#334155' },
-  logTitle: { fontSize: 14, fontWeight: '700', color: '#f8fafc', marginBottom: 10 },
-  logHint: { color: '#64748b', fontSize: 13, marginBottom: 10, lineHeight: 18 },
-  logHintSmall: { color: '#475569', fontSize: 11, marginBottom: 12, lineHeight: 16 },
-  plainEnglishInput: { backgroundColor: '#1e293b', borderRadius: 12, padding: 14, color: '#f8fafc', fontSize: 15, borderWidth: 1, borderColor: '#334155', marginBottom: 8, minHeight: 80, lineHeight: 22 },
-  logLabel: { fontSize: 11, fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
-  input: { backgroundColor: '#1e293b', borderRadius: 10, padding: 12, color: '#f8fafc', fontSize: 14, borderWidth: 1, borderColor: '#334155', marginBottom: 14 },
-  rpeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 14 },
-  rpeBtn: { width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: '#334155', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1e293b' },
-  rpeBtnOn: { backgroundColor: '#6366f1', borderColor: '#6366f1' },
-  rpeBtnText: { color: '#64748b', fontSize: 13, fontWeight: '700' },
+  statValue: { fontSize: fs['2xl'], fontWeight: fontWeight.extrabold, color: colors.textPrimary },
+  statLabel: { fontSize: fs.xs, color: colors.textMuted, marginTop: 2 },
+  section: { marginBottom: spacing[18] },
+  sectionTitle: { fontSize: fs.xs, fontWeight: fontWeight.bold, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: spacing[8] },
+  reasoningText: { color: colors.textSecondary, fontSize: fs.md, lineHeight: 22 },
+  exRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing[10] },
+  exNum: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center', marginRight: spacing[10], marginTop: 2 },
+  exNumText: { color: colors.textSecondary, fontSize: fs.sm, fontWeight: fontWeight.bold },
+  exName: { color: colors.textPrimary, fontSize: fs.md, fontWeight: fontWeight.semibold, marginBottom: 2 },
+  exMeta: { color: colors.textMuted, fontSize: fs.base },
+  logSection: { backgroundColor: colors.background, borderRadius: radius['3xl'], padding: spacing[16], marginTop: spacing[4], borderWidth: 1, borderColor: colors.border },
+  logTitle: { fontSize: fs.md, fontWeight: fontWeight.bold, color: colors.textPrimary, marginBottom: spacing[10] },
+  logHint: { color: colors.textMuted, fontSize: fs.base, marginBottom: spacing[10], lineHeight: 18 },
+  logHintSmall: { color: colors.textPlaceholder, fontSize: fs.xs, marginBottom: spacing[12], lineHeight: 16 },
+  plainEnglishInput: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: spacing[14], color: colors.textPrimary, fontSize: fs.lg, borderWidth: 1, borderColor: colors.border, marginBottom: spacing[8], minHeight: 80, lineHeight: 22 },
+  logLabel: { fontSize: fs.xs, fontWeight: fontWeight.bold, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: spacing[6] },
+  input: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing[12], color: colors.textPrimary, fontSize: fs.md, borderWidth: 1, borderColor: colors.border, marginBottom: spacing[14] },
+  rpeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[6], marginBottom: spacing[14] },
+  rpeBtn: { width: 36, height: 36, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface },
+  rpeBtnOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  rpeBtnText: { color: colors.textMuted, fontSize: fs.base, fontWeight: fontWeight.bold },
   rpeBtnTextOn: { color: '#fff' },
-  actionRow: { gap: 8 },
-  completeBtn: { backgroundColor: '#16a34a', borderRadius: 12, padding: 14, alignItems: 'center' },
-  completeBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-  skipBtn: { backgroundColor: '#1c0f0f', borderRadius: 12, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: '#ef444440' },
-  skipBtnText: { color: '#ef4444', fontSize: 14, fontWeight: '600' },
-  resetBtn: { alignItems: 'center', padding: 10 },
-  resetBtnText: { color: '#64748b', fontSize: 13 },
-  savedConfirm: { alignItems: 'center', padding: 20 },
-  savedConfirmText: { color: '#22c55e', fontSize: 16, fontWeight: '700' },
-  typeChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 16, backgroundColor: '#0f172a', borderWidth: 1, borderColor: '#334155' },
-  typeChipOn: { backgroundColor: '#4f46e5', borderColor: '#4f46e5' },
-  typeChipText: { color: '#64748b', fontSize: 13 },
-  typeChipTextOn: { color: '#fff', fontWeight: '700' },
-  exInput: { backgroundColor: '#0f172a', borderRadius: 12, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: '#334155' },
-  exInputNum: { color: '#6366f1', fontSize: 14, fontWeight: '800', marginRight: 10, width: 20 },
-  addExBtn: { borderWidth: 1, borderColor: '#334155', borderRadius: 10, padding: 12, alignItems: 'center', borderStyle: 'dashed', marginBottom: 4 },
-  addExBtnText: { color: '#6366f1', fontSize: 14, fontWeight: '600' },
+  actionRow: { gap: spacing[8] },
+  completeBtn: { backgroundColor: colors.successGreen, borderRadius: radius.xl, padding: spacing[14], alignItems: 'center', flexDirection: 'row', justifyContent: 'center' },
+  completeBtnText: { color: '#fff', fontSize: fs.md, fontWeight: fontWeight.bold },
+  skipBtn: { backgroundColor: colors.errorDark, borderRadius: radius.xl, padding: spacing[12], alignItems: 'center', borderWidth: 1, borderColor: '#ef444440', flexDirection: 'row', justifyContent: 'center' },
+  skipBtnText: { color: colors.error, fontSize: fs.md, fontWeight: fontWeight.semibold },
+  resetBtn: { alignItems: 'center', padding: spacing[10] },
+  resetBtnText: { color: colors.textMuted, fontSize: fs.base },
+  savedConfirm: { alignItems: 'center', padding: spacing[20] },
+  savedConfirmText: { color: colors.success, fontSize: fs.xl, fontWeight: fontWeight.bold },
+  typeChip: { paddingHorizontal: spacing[12], paddingVertical: 7, borderRadius: radius['3xl'], backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border },
+  typeChipOn: { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark },
+  typeChipText: { color: colors.textMuted, fontSize: fs.base },
+  typeChipTextOn: { color: '#fff', fontWeight: fontWeight.bold },
+  exInput: { backgroundColor: colors.background, borderRadius: radius.xl, padding: spacing[12], marginBottom: spacing[10], borderWidth: 1, borderColor: colors.border },
+  exInputNum: { color: colors.primary, fontSize: fs.md, fontWeight: fontWeight.extrabold, marginRight: spacing[10], width: 20 },
+  addExBtn: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing[12], alignItems: 'center', borderStyle: 'dashed', marginBottom: spacing[4] },
+  addExBtnText: { color: colors.primary, fontSize: fs.md, fontWeight: fontWeight.semibold },
 });

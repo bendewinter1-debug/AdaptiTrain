@@ -24,6 +24,9 @@ import { insertWorkout, insertExercises } from '../services/supabase';
 import WorkoutCard from '../components/WorkoutCard';
 import type { Workout } from '../types';
 import { useWeightUnit } from '../hooks/useWeightUnit';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, fontSize as fs, radius, spacing, fontWeight } from '../theme';
+import { SkeletonBox } from '../components/SkeletonBox';
 
 interface Props {
   userId: string;
@@ -51,7 +54,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
       return (
         <Text key={li} style={isUser ? bStyles.textUser : bStyles.text}>
           {parts.map((p, pi) =>
-            pi % 2 === 1 ? <Text key={pi} style={{ fontWeight: '800' }}>{p}</Text> : p
+            pi % 2 === 1 ? <Text key={pi} style={{ fontWeight: fontWeight.extrabold }}>{p}</Text> : p
           )}
           {li < lines.length - 1 ? '\n' : null}
         </Text>
@@ -69,13 +72,13 @@ function ChatBubble({ message }: { message: ChatMessage }) {
 }
 
 const bStyles = StyleSheet.create({
-  wrap: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12, paddingHorizontal: 16 },
+  wrap: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: spacing[12], paddingHorizontal: spacing[16] },
   wrapUser: { flexDirection: 'row-reverse' },
-  avatar: { fontSize: 22, marginRight: 8, marginBottom: 2 },
-  bubble: { backgroundColor: '#1e293b', borderRadius: 18, borderBottomLeftRadius: 4, padding: 14, maxWidth: '80%' },
-  bubbleUser: { backgroundColor: '#4f46e5', borderBottomLeftRadius: 18, borderBottomRightRadius: 4 },
-  text: { color: '#e2e8f0', fontSize: 15, lineHeight: 22 },
-  textUser: { color: '#fff', fontSize: 15, lineHeight: 22 },
+  avatar: { fontSize: fs['4xl'], marginRight: spacing[8], marginBottom: spacing[2] },
+  bubble: { backgroundColor: colors.surface, borderRadius: 18, borderBottomLeftRadius: spacing[4], padding: spacing[14], maxWidth: '80%' },
+  bubbleUser: { backgroundColor: colors.primaryDark, borderBottomLeftRadius: 18, borderBottomRightRadius: spacing[4] },
+  text: { color: '#e2e8f0', fontSize: fs.lg, lineHeight: 22 },
+  textUser: { color: '#fff', fontSize: fs.lg, lineHeight: 22 },
 });
 
 // ─── Recovery pill ────────────────────────────────────────────────────────────
@@ -88,9 +91,9 @@ function StatPill({ label, value, color }: { label: string; value: string; color
   );
 }
 const pillStyles = StyleSheet.create({
-  wrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1e293b', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: '#334155', marginRight: 8 },
-  label: { color: '#64748b', fontSize: 12, marginRight: 4 },
-  value: { fontSize: 13, fontWeight: '700', color: '#f8fafc' },
+  wrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius['4xl'], paddingHorizontal: spacing[12], paddingVertical: spacing[6], borderWidth: 1, borderColor: colors.border, marginRight: spacing[8] },
+  label: { color: colors.textMuted, fontSize: fs.sm, marginRight: spacing[4] },
+  value: { fontSize: fs.base, fontWeight: fontWeight.bold, color: colors.textPrimary },
 });
 
 // ─── Clarifying questions panel ───────────────────────────────────────────────
@@ -158,23 +161,23 @@ function ClarifyPanel({
 }
 
 const cStyles = StyleSheet.create({
-  panel: { marginHorizontal: 16, marginBottom: 8, backgroundColor: '#1e293b', borderRadius: 20, padding: 20, borderWidth: 1, borderColor: '#334155' },
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  title: { color: '#f8fafc', fontSize: 16, fontWeight: '800' },
-  recBadge: { backgroundColor: '#312e81', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: '#4f46e5' },
-  recBadgeText: { color: '#a5b4fc', fontSize: 11, fontWeight: '700' },
-  qBlock: { marginBottom: 14 },
-  qLabel: { color: '#94a3b8', fontSize: 13, marginBottom: 8 },
-  chips: { gap: 8, paddingRight: 4 },
-  chip: { backgroundColor: '#0f172a', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: '#334155' },
-  chipSelected: { backgroundColor: '#4f46e5', borderColor: '#4f46e5' },
-  chipRecommended: { backgroundColor: '#1e1b4b', borderColor: '#6366f1', borderStyle: 'dashed' },
-  chipText: { color: '#64748b', fontSize: 13 },
-  chipTextSelected: { color: '#fff', fontWeight: '700' },
-  chipTextRecommended: { color: '#a5b4fc', fontWeight: '600' },
-  genBtn: { backgroundColor: '#6366f1', borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 4 },
+  panel: { marginHorizontal: spacing[16], marginBottom: spacing[8], backgroundColor: colors.surface, borderRadius: radius['4xl'], padding: spacing[20], borderWidth: 1, borderColor: colors.border },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing[16] },
+  title: { color: colors.textPrimary, fontSize: fs.xl, fontWeight: fontWeight.extrabold },
+  recBadge: { backgroundColor: '#312e81', borderRadius: spacing[10], paddingHorizontal: spacing[8], paddingVertical: 3, borderWidth: 1, borderColor: colors.primaryDark },
+  recBadgeText: { color: '#a5b4fc', fontSize: fs.xs, fontWeight: fontWeight.bold },
+  qBlock: { marginBottom: spacing[14] },
+  qLabel: { color: colors.textSecondary, fontSize: fs.base, marginBottom: spacing[8] },
+  chips: { gap: spacing[8], paddingRight: spacing[4] },
+  chip: { backgroundColor: colors.background, borderRadius: radius['3xl'], paddingHorizontal: spacing[14], paddingVertical: 7, borderWidth: 1, borderColor: colors.border },
+  chipSelected: { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark },
+  chipRecommended: { backgroundColor: colors.indigoDark, borderColor: colors.primary, borderStyle: 'dashed' },
+  chipText: { color: colors.textMuted, fontSize: fs.base },
+  chipTextSelected: { color: '#fff', fontWeight: fontWeight.bold },
+  chipTextRecommended: { color: '#a5b4fc', fontWeight: fontWeight.semibold },
+  genBtn: { backgroundColor: colors.primary, borderRadius: radius['2xl'], padding: spacing[16], alignItems: 'center', marginTop: spacing[4] },
   genBtnOff: { opacity: 0.4 },
-  genBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  genBtnText: { color: '#fff', fontSize: fs.lg, fontWeight: fontWeight.bold },
 });
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
@@ -228,6 +231,9 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
   const [pendingPartial, setPendingPartial] = useState<Partial<ParsedWorkout> | null>(null);
   const [logSummary, setLogSummary] = useState('');
 
+  // Loading state for initial context fetch
+  const [loadingContext, setLoadingContext] = useState(true);
+
   const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => { loadContext(); }, [userId]);
@@ -267,7 +273,9 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
         recentWorkouts: completed.slice(0, 5),
         recentWhoopData: whoopWeek,
       });
-    } catch {}
+    } catch {} finally {
+      setLoadingContext(false);
+    }
   }, [userId, latestData]);
 
   // ─── Parse plain-English completion notes for RPE and duration hints ─────────
@@ -543,7 +551,7 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
   }
 
   const recovery = latestData?.recovery_score;
-  const recoveryColor = recovery == null ? '#64748b' : recovery >= 67 ? '#22c55e' : recovery >= 34 ? '#eab308' : '#ef4444';
+  const recoveryColor = recovery == null ? colors.textMuted : recovery >= 67 ? colors.success : recovery >= 34 ? colors.warning : colors.error;
   const recoveryLabel = recovery == null ? null : recovery >= 67 ? 'Ready to push' : recovery >= 34 ? 'Moderate day' : 'Recovery day';
 
   const QUICK_PROMPTS = [
@@ -573,6 +581,21 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
         </View>
       </View>
 
+      {/* Skeleton loading for initial data fetch */}
+      {Object.keys(userCtx).length === 0 && loadingContext && (
+        <View style={{ padding: spacing[16] }}>
+          <SkeletonBox height={100} borderRadius={radius['4xl']} style={{ marginBottom: spacing[12] }} />
+          <View style={{ flexDirection: 'row', gap: spacing[8], marginBottom: spacing[12] }}>
+            <SkeletonBox width="30%" height={56} borderRadius={radius['2xl']} />
+            <SkeletonBox width="30%" height={56} borderRadius={radius['2xl']} />
+            <SkeletonBox width="30%" height={56} borderRadius={radius['2xl']} />
+          </View>
+          <SkeletonBox height={56} borderRadius={radius['2xl']} style={{ marginBottom: spacing[8] }} />
+          <SkeletonBox height={56} borderRadius={radius['2xl']} style={{ marginBottom: spacing[8] }} />
+          <SkeletonBox height={56} borderRadius={radius['2xl']} />
+        </View>
+      )}
+
       {/* ── Whoop status card ── */}
       {needsReconnect ? (
         // Token existed but lacked scopes — show amber reconnect prompt
@@ -593,7 +616,7 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
               {syncing && <Text style={styles.whoopSyncing}> · Syncing…</Text>}
               {!syncing && lastSynced && <Text style={styles.whoopSyncTime}> · {relativeTime(lastSynced)}</Text>}
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[8] }}>
               <TouchableOpacity
                 onPress={toggleUnit}
                 style={styles.unitToggle}
@@ -618,7 +641,7 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
           {/* Always show all 4 metrics once Whoop is connected — use '—' when syncing hasn't returned data yet */}
           <View style={styles.whoopMetrics}>
             <View style={styles.whoopMetric}>
-              <Text style={[styles.whoopMetricValue, { color: latestData?.recovery_score != null ? recoveryColor : '#475569' }]}>
+              <Text style={[styles.whoopMetricValue, { color: latestData?.recovery_score != null ? recoveryColor : colors.textPlaceholder }]}>
                 {latestData?.recovery_score != null ? `${latestData.recovery_score}%` : '—'}
               </Text>
               <Text style={styles.whoopMetricLabel}>Recovery</Text>
@@ -626,21 +649,21 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
             <View style={styles.whoopMetric}>
               <Text style={[styles.whoopMetricValue, {
                 color: latestData?.sleep_score != null
-                  ? latestData.sleep_score > 75 ? '#22c55e' : latestData.sleep_score > 50 ? '#eab308' : '#ef4444'
-                  : '#475569'
+                  ? latestData.sleep_score > 75 ? colors.success : latestData.sleep_score > 50 ? colors.warning : colors.error
+                  : colors.textPlaceholder
               }]}>
                 {latestData?.sleep_score != null ? `${latestData.sleep_score}%` : '—'}
               </Text>
               <Text style={styles.whoopMetricLabel}>Sleep</Text>
             </View>
             <View style={styles.whoopMetric}>
-              <Text style={[styles.whoopMetricValue, { color: latestData?.hrv_rmssd != null ? '#a5b4fc' : '#475569' }]}>
+              <Text style={[styles.whoopMetricValue, { color: latestData?.hrv_rmssd != null ? '#a5b4fc' : colors.textPlaceholder }]}>
                 {latestData?.hrv_rmssd != null ? `${Math.round(latestData.hrv_rmssd)}ms` : '—'}
               </Text>
               <Text style={styles.whoopMetricLabel}>HRV</Text>
             </View>
             <View style={styles.whoopMetric}>
-              <Text style={[styles.whoopMetricValue, { color: latestData?.strain != null ? '#fb923c' : '#475569' }]}>
+              <Text style={[styles.whoopMetricValue, { color: latestData?.strain != null ? '#fb923c' : colors.textPlaceholder }]}>
                 {latestData?.strain != null ? latestData.strain.toFixed(1) : '—'}
               </Text>
               <Text style={styles.whoopMetricLabel}>Strain</Text>
@@ -671,7 +694,10 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
               {workoutCompleted ? '✅' : '🏋️'} {generatedWorkout.workoutType} · {generatedWorkout.estimatedDuration} min
             </Text>
             {workoutCompleted && <Text style={styles.completedTag}>Logged ✓</Text>}
-            <Text style={styles.chevron}>{showWorkout ? '▲' : '▼'}</Text>
+            {showWorkout
+              ? <Ionicons name="chevron-up" size={14} color={colors.textMuted} />
+              : <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
+            }
           </TouchableOpacity>
           {showWorkout && (
             <ScrollView
@@ -724,7 +750,7 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
                     value={markNotes}
                     onChangeText={setMarkNotes}
                     placeholder={`How did ${generatedWorkout.workoutType} go? Any changes or notes?`}
-                    placeholderTextColor="#475569"
+                    placeholderTextColor={colors.textPlaceholder}
                     multiline
                     autoFocus
                     textAlignVertical="top"
@@ -800,11 +826,11 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
           <View style={bStyles.wrap}>
             <Text style={bStyles.avatar}>🤖</Text>
             <View style={[bStyles.bubble, styles.typingBubble]}>
-              <ActivityIndicator size="small" color="#6366f1" />
+              <ActivityIndicator size="small" color={colors.primary} />
             </View>
           </View>
         )}
-        <View style={{ height: 8 }} />
+        <View style={{ height: spacing[8] }} />
       </ScrollView>
 
       {/* ── Workout log confirmation card ── */}
@@ -854,7 +880,7 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
       {/* Parsing spinner */}
       {logState === 'parsing' && (
         <View style={styles.parsingBar}>
-          <ActivityIndicator size="small" color="#6366f1" />
+          <ActivityIndicator size="small" color={colors.primary} />
           <Text style={styles.parsingText}>Reading your workout…</Text>
         </View>
       )}
@@ -869,7 +895,7 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
           activeOpacity={0.8}
         >
           {generating
-            ? <ActivityIndicator size="small" color="#fff" style={{ marginRight: 6 }} />
+            ? <ActivityIndicator size="small" color="#fff" style={{ marginRight: spacing[6] }} />
             : <Text style={styles.quickChipPrimaryIcon}>🤖</Text>
           }
           <Text style={styles.quickChipPrimaryText}>{generating ? 'Building…' : 'Generate workout'}</Text>
@@ -901,7 +927,7 @@ export default function HomeScreen({ userId, onStartWorkout, onConnectWhoop, who
           <TextInput
             style={[styles.input, inputExpanded && styles.inputExpanded]}
             placeholder={logState === 'clarifying' ? 'Answer above, then send…' : 'Ask your coach, or describe a workout you did…'}
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textPlaceholder}
             value={chatInput}
             onChangeText={setChatInput}
             onSubmitEditing={inputExpanded ? undefined : () => sendMessage()}
@@ -953,122 +979,122 @@ function relativeTime(date: Date) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: colors.background,
     ...(Platform.OS === 'web' ? { display: 'flex' as 'flex', flexDirection: 'column' as 'column', height: '100%' as unknown as number } : {}),
   },
-  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 52, paddingBottom: 12 },
-  greeting: { fontSize: 13, color: '#64748b' },
-  appTitle: { fontSize: 24, fontWeight: '900', color: '#f8fafc' },
-  topRight: { alignItems: 'flex-end', gap: 6 },
-  weekStat: { color: '#64748b', fontSize: 12 },
-  recoveryBadge: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, gap: 6 },
+  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: spacing[20], paddingTop: 52, paddingBottom: spacing[12] },
+  greeting: { fontSize: fs.base, color: colors.textMuted },
+  appTitle: { fontSize: 24, fontWeight: fontWeight.black, color: colors.textPrimary },
+  topRight: { alignItems: 'flex-end', gap: spacing[6] },
+  weekStat: { color: colors.textMuted, fontSize: fs.sm },
+  recoveryBadge: { flexDirection: 'row', alignItems: 'center', borderRadius: radius.xl, paddingHorizontal: spacing[10], paddingVertical: spacing[4], gap: spacing[6] },
   recoveryDot: { width: 6, height: 6, borderRadius: 3 },
-  recoveryBadgeText: { fontSize: 12, fontWeight: '700' },
+  recoveryBadgeText: { fontSize: fs.sm, fontWeight: fontWeight.bold },
   // Whoop connected card
-  whoopCard: { marginHorizontal: 16, marginBottom: 10, backgroundColor: '#1e293b', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#22c55e33' },
-  whoopCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  whoopCard: { marginHorizontal: spacing[16], marginBottom: spacing[10], backgroundColor: colors.surface, borderRadius: radius['3xl'], padding: spacing[14], borderWidth: 1, borderColor: '#22c55e33' },
+  whoopCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[12] },
   whoopCardLeft: { flexDirection: 'row', alignItems: 'center' },
-  whoopDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e', marginRight: 6 },
-  whoopCardLabel: { fontSize: 11, fontWeight: '800', color: '#22c55e', letterSpacing: 1, textTransform: 'uppercase' },
-  whoopSyncing: { fontSize: 11, color: '#64748b' },
-  whoopSyncTime: { fontSize: 11, color: '#475569' },
-  whoopSyncBtn: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: '#0f172a', borderWidth: 1, borderColor: '#334155' },
-  whoopSyncBtnText: { color: '#6366f1', fontSize: 12, fontWeight: '700' },
-  unitToggle: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: '#0f172a', borderWidth: 1, borderColor: '#334155' },
-  unitToggleText: { color: '#94a3b8', fontSize: 12, fontWeight: '700' },
+  whoopDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.success, marginRight: spacing[6] },
+  whoopCardLabel: { fontSize: fs.xs, fontWeight: fontWeight.extrabold, color: colors.success, letterSpacing: 1, textTransform: 'uppercase' },
+  whoopSyncing: { fontSize: fs.xs, color: colors.textMuted },
+  whoopSyncTime: { fontSize: fs.xs, color: colors.textPlaceholder },
+  whoopSyncBtn: { paddingHorizontal: spacing[10], paddingVertical: spacing[4], borderRadius: radius.md, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border },
+  whoopSyncBtnText: { color: colors.primary, fontSize: fs.sm, fontWeight: fontWeight.bold },
+  unitToggle: { paddingHorizontal: spacing[10], paddingVertical: spacing[4], borderRadius: radius.md, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border },
+  unitToggleText: { color: colors.textSecondary, fontSize: fs.sm, fontWeight: fontWeight.bold },
   whoopMetrics: { flexDirection: 'row', gap: 0 },
   whoopMetric: { flex: 1, alignItems: 'center' },
-  whoopMetricValue: { fontSize: 20, fontWeight: '800', marginBottom: 2 },
-  whoopMetricLabel: { fontSize: 11, color: '#64748b', fontWeight: '600' },
-  whoopNoData: { color: '#475569', fontSize: 13, textAlign: 'center', paddingVertical: 4 },
-  missingScopesBar: { backgroundColor: '#1c1507', borderRadius: 8, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: '#d9770640' },
-  missingScopesText: { color: '#fbbf24', fontSize: 12, fontWeight: '600', textAlign: 'center' },
+  whoopMetricValue: { fontSize: fs['3xl'], fontWeight: fontWeight.extrabold, marginBottom: 2 },
+  whoopMetricLabel: { fontSize: fs.xs, color: colors.textMuted, fontWeight: fontWeight.semibold },
+  whoopNoData: { color: colors.textPlaceholder, fontSize: fs.base, textAlign: 'center', paddingVertical: spacing[4] },
+  missingScopesBar: { backgroundColor: '#1c1507', borderRadius: radius.md, padding: spacing[10], marginBottom: spacing[10], borderWidth: 1, borderColor: '#d9770640' },
+  missingScopesText: { color: '#fbbf24', fontSize: fs.sm, fontWeight: fontWeight.semibold, textAlign: 'center' },
   // Whoop not-connected card
-  whoopConnectCard: { marginHorizontal: 16, marginBottom: 10, backgroundColor: '#1e293b', borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#334155', borderStyle: 'dashed' },
-  whoopConnectIcon: { fontSize: 28, marginRight: 12 },
+  whoopConnectCard: { marginHorizontal: spacing[16], marginBottom: spacing[10], backgroundColor: colors.surface, borderRadius: radius['3xl'], padding: spacing[14], flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed' },
+  whoopConnectIcon: { fontSize: fs['6xl'], marginRight: spacing[12] },
   whoopConnectText: { flex: 1 },
-  whoopConnectTitle: { fontSize: 14, fontWeight: '700', color: '#f8fafc', marginBottom: 2 },
-  whoopConnectSub: { fontSize: 12, color: '#64748b' },
-  whoopConnectArrow: { fontSize: 22, color: '#6366f1', fontWeight: '300' },
+  whoopConnectTitle: { fontSize: fs.md, fontWeight: fontWeight.bold, color: colors.textPrimary, marginBottom: 2 },
+  whoopConnectSub: { fontSize: fs.sm, color: colors.textMuted },
+  whoopConnectArrow: { fontSize: fs['4xl'], color: colors.primary, fontWeight: '300' },
   // Whoop needs-reconnect card (amber warning)
-  whoopReconnectCard: { marginHorizontal: 16, marginBottom: 10, backgroundColor: '#1c1507', borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#d9770640' },
-  whoopReconnectIcon: { fontSize: 24, marginRight: 12 },
-  whoopReconnectTitle: { fontSize: 14, fontWeight: '700', color: '#fbbf24', marginBottom: 2 },
-  whoopReconnectSub: { fontSize: 12, color: '#92400e' },
-  workoutBanner: { marginHorizontal: 16, marginBottom: 8, backgroundColor: '#1e293b', borderRadius: 16, borderWidth: 1, borderColor: '#334155' },
-  workoutBannerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
-  workoutBannerTitle: { color: '#f8fafc', fontSize: 14, fontWeight: '700', flex: 1 },
-  chevron: { color: '#64748b', fontSize: 12, marginLeft: 8 },
+  whoopReconnectCard: { marginHorizontal: spacing[16], marginBottom: spacing[10], backgroundColor: '#1c1507', borderRadius: radius['3xl'], padding: spacing[14], flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#d9770640' },
+  whoopReconnectIcon: { fontSize: 24, marginRight: spacing[12] },
+  whoopReconnectTitle: { fontSize: fs.md, fontWeight: fontWeight.bold, color: '#fbbf24', marginBottom: 2 },
+  whoopReconnectSub: { fontSize: fs.sm, color: '#92400e' },
+  workoutBanner: { marginHorizontal: spacing[16], marginBottom: spacing[8], backgroundColor: colors.surface, borderRadius: radius['3xl'], borderWidth: 1, borderColor: colors.border },
+  workoutBannerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing[14] },
+  workoutBannerTitle: { color: colors.textPrimary, fontSize: fs.md, fontWeight: fontWeight.bold, flex: 1 },
+  chevron: { color: colors.textMuted, fontSize: fs.sm, marginLeft: spacing[8] },
   workoutBannerScroll: { maxHeight: 420 },
-  workoutBannerBody: { paddingHorizontal: 14, paddingBottom: 14 },
-  startBtn: { flex: 1, backgroundColor: '#6366f1', borderRadius: 12, padding: 14, alignItems: 'center' },
-  startBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-  regenBtn: { alignItems: 'center', padding: 10 },
-  regenBtnText: { color: '#6366f1', fontSize: 13, fontWeight: '600' },
-  errorBanner: { marginHorizontal: 16, backgroundColor: '#2d1515', borderRadius: 10, padding: 12, marginBottom: 8, borderLeftWidth: 3, borderLeftColor: '#ef4444' },
-  errorText: { color: '#fca5a5', fontSize: 13 },
+  workoutBannerBody: { paddingHorizontal: spacing[14], paddingBottom: spacing[14] },
+  startBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: radius.xl, padding: spacing[14], alignItems: 'center' },
+  startBtnText: { color: '#fff', fontSize: fs.md, fontWeight: fontWeight.bold },
+  regenBtn: { alignItems: 'center', padding: spacing[10] },
+  regenBtnText: { color: colors.primary, fontSize: fs.base, fontWeight: fontWeight.semibold },
+  errorBanner: { marginHorizontal: spacing[16], backgroundColor: colors.errorDeeper, borderRadius: radius.lg, padding: spacing[12], marginBottom: spacing[8], borderLeftWidth: 3, borderLeftColor: colors.error },
+  errorText: { color: colors.errorLighter, fontSize: fs.base },
   chatScroll: { flex: 1 },
-  chatContent: { paddingTop: 12, paddingBottom: 8 },
-  typingBubble: { paddingVertical: 12, paddingHorizontal: 16 },
+  chatContent: { paddingTop: spacing[12], paddingBottom: spacing[8] },
+  typingBubble: { paddingVertical: spacing[12], paddingHorizontal: spacing[16] },
   quickBar: { flexShrink: 0, maxHeight: 46 },
-  quickContent: { paddingHorizontal: 16, paddingVertical: 6, gap: 8 },
-  quickChip: { backgroundColor: '#1e293b', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: '#334155' },
-  quickChipText: { color: '#94a3b8', fontSize: 13 },
-  quickChipPrimary: { backgroundColor: '#4f46e5', borderColor: '#4f46e5', flexDirection: 'row', alignItems: 'center' },
-  quickChipPrimaryIcon: { fontSize: 14, marginRight: 6 },
-  quickChipPrimaryText: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  inputBar: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: Platform.OS === 'ios' ? 30 : 14, backgroundColor: '#1e293b', borderTopWidth: 1, borderTopColor: '#334155' },
-  inputBarExpanded: { paddingBottom: Platform.OS === 'ios' ? 30 : 14 },
-  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10 },
-  input: { flex: 1, backgroundColor: '#0f172a', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, color: '#f8fafc', fontSize: 15, borderWidth: 1, borderColor: '#334155', maxHeight: 120, lineHeight: 22 },
+  quickContent: { paddingHorizontal: spacing[16], paddingVertical: spacing[6], gap: spacing[8] },
+  quickChip: { backgroundColor: colors.surface, borderRadius: radius['4xl'], paddingHorizontal: spacing[14], paddingVertical: spacing[8], borderWidth: 1, borderColor: colors.border },
+  quickChipText: { color: colors.textSecondary, fontSize: fs.base },
+  quickChipPrimary: { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark, flexDirection: 'row', alignItems: 'center' },
+  quickChipPrimaryIcon: { fontSize: fs.md, marginRight: spacing[6] },
+  quickChipPrimaryText: { color: '#fff', fontSize: fs.base, fontWeight: fontWeight.bold },
+  inputBar: { paddingHorizontal: spacing[16], paddingTop: spacing[10], paddingBottom: Platform.OS === 'ios' ? 30 : spacing[14], backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
+  inputBarExpanded: { paddingBottom: Platform.OS === 'ios' ? 30 : spacing[14] },
+  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing[10] },
+  input: { flex: 1, backgroundColor: colors.background, borderRadius: radius['3xl'], paddingHorizontal: spacing[16], paddingVertical: spacing[10], color: colors.textPrimary, fontSize: fs.lg, borderWidth: 1, borderColor: colors.border, maxHeight: 120, lineHeight: 22 },
   inputExpanded: { maxHeight: 200, height: 200 },
-  inputBtns: { flexDirection: 'column', gap: 6, alignItems: 'center', flexShrink: 0 },
-  expandBtn: { backgroundColor: '#334155', borderRadius: 18, width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  expandBtnText: { color: '#94a3b8', fontSize: 16, fontWeight: '700' },
-  charCount: { color: '#475569', fontSize: 11, textAlign: 'right', marginTop: 4 },
-  sendBtn: { backgroundColor: '#6366f1', borderRadius: 22, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  inputBtns: { flexDirection: 'column', gap: spacing[6], alignItems: 'center', flexShrink: 0 },
+  expandBtn: { backgroundColor: colors.border, borderRadius: 18, width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  expandBtnText: { color: colors.textSecondary, fontSize: fs.xl, fontWeight: fontWeight.bold },
+  charCount: { color: colors.textPlaceholder, fontSize: fs.xs, textAlign: 'right', marginTop: spacing[4] },
+  sendBtn: { backgroundColor: colors.primary, borderRadius: 22, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   sendBtnOff: { opacity: 0.35 },
-  sendBtnText: { color: '#fff', fontSize: 22, fontWeight: '700', lineHeight: 26 },
+  sendBtnText: { color: '#fff', fontSize: fs['4xl'], fontWeight: fontWeight.bold, lineHeight: 26 },
   // Workout banner
-  completedTag: { color: '#22c55e', fontSize: 12, fontWeight: '700', marginRight: 6 },
-  actionRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  completedConfirm: { backgroundColor: '#052e16', borderRadius: 12, padding: 12, alignItems: 'center', marginTop: 12, borderWidth: 1, borderColor: '#16a34a40' },
-  completedConfirmText: { color: '#22c55e', fontSize: 14, fontWeight: '700' },
+  completedTag: { color: colors.success, fontSize: fs.sm, fontWeight: fontWeight.bold, marginRight: spacing[6] },
+  actionRow: { flexDirection: 'row', gap: spacing[10], marginTop: spacing[12] },
+  completedConfirm: { backgroundColor: '#052e16', borderRadius: radius.xl, padding: spacing[12], alignItems: 'center', marginTop: spacing[12], borderWidth: 1, borderColor: '#16a34a40' },
+  completedConfirmText: { color: colors.success, fontSize: fs.md, fontWeight: fontWeight.bold },
   // Mark complete panel
-  markCompletePanel: { backgroundColor: '#0f172a', borderRadius: 16, padding: 16, marginTop: 12, borderWidth: 1, borderColor: '#334155' },
-  markCompleteTitle: { color: '#f8fafc', fontSize: 15, fontWeight: '700', marginBottom: 6 },
-  markCompleteHint: { color: '#64748b', fontSize: 13, marginBottom: 12, lineHeight: 18 },
-  markCompleteHintSmall: { color: '#475569', fontSize: 11, marginBottom: 12, lineHeight: 16 },
-  markCompleteTextArea: { backgroundColor: '#1e293b', borderRadius: 12, padding: 14, color: '#f8fafc', fontSize: 15, borderWidth: 1, borderColor: '#334155', marginBottom: 10, minHeight: 90, lineHeight: 22 },
-  confirmBtn: { backgroundColor: '#22c55e', borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 2 },
-  confirmBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-  markCompleteBtn: { flex: 1, backgroundColor: '#052e16', borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: '#16a34a40' },
-  markCompleteBtnText: { color: '#22c55e', fontSize: 14, fontWeight: '700' },
+  markCompletePanel: { backgroundColor: colors.background, borderRadius: radius['3xl'], padding: spacing[16], marginTop: spacing[12], borderWidth: 1, borderColor: colors.border },
+  markCompleteTitle: { color: colors.textPrimary, fontSize: fs.lg, fontWeight: fontWeight.bold, marginBottom: spacing[6] },
+  markCompleteHint: { color: colors.textMuted, fontSize: fs.base, marginBottom: spacing[12], lineHeight: 18 },
+  markCompleteHintSmall: { color: colors.textPlaceholder, fontSize: fs.xs, marginBottom: spacing[12], lineHeight: 16 },
+  markCompleteTextArea: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: spacing[14], color: colors.textPrimary, fontSize: fs.lg, borderWidth: 1, borderColor: colors.border, marginBottom: spacing[10], minHeight: 90, lineHeight: 22 },
+  confirmBtn: { backgroundColor: colors.success, borderRadius: radius.xl, padding: spacing[14], alignItems: 'center', marginTop: 2 },
+  confirmBtnText: { color: '#fff', fontSize: fs.md, fontWeight: fontWeight.bold },
+  markCompleteBtn: { flex: 1, backgroundColor: '#052e16', borderRadius: radius.xl, padding: spacing[14], alignItems: 'center', borderWidth: 1, borderColor: '#16a34a40' },
+  markCompleteBtnText: { color: colors.success, fontSize: fs.md, fontWeight: fontWeight.bold },
   // Log workout quick chip
   quickChipLog: { backgroundColor: '#0f2a1e', borderColor: '#16a34a60', borderWidth: 1, flexDirection: 'row', alignItems: 'center' },
-  quickChipLogIcon: { fontSize: 14, marginRight: 6 },
-  quickChipLogText: { color: '#22c55e', fontSize: 13, fontWeight: '700' },
+  quickChipLogIcon: { fontSize: fs.md, marginRight: spacing[6] },
+  quickChipLogText: { color: colors.success, fontSize: fs.base, fontWeight: fontWeight.bold },
   // Log confirmation card
-  logConfirmCard: { marginHorizontal: 16, marginBottom: 8, backgroundColor: '#0f2a1e', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#16a34a40' },
-  logConfirmHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-  logConfirmTitle: { color: '#22c55e', fontSize: 13, fontWeight: '700' },
-  logConfirmType: { color: '#94a3b8', fontSize: 12 },
-  logConfirmExercises: { marginBottom: 8 },
-  logConfirmEx: { color: '#cbd5e1', fontSize: 13, marginBottom: 3 },
-  logConfirmMeta: { color: '#64748b', fontSize: 12, marginBottom: 10 },
-  logConfirmActions: { flexDirection: 'row', gap: 8 },
-  logConfirmSave: { flex: 1, backgroundColor: '#16a34a', borderRadius: 10, padding: 12, alignItems: 'center' },
-  logConfirmSaveText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-  logConfirmCancel: { backgroundColor: '#1e293b', borderRadius: 10, padding: 12, alignItems: 'center', paddingHorizontal: 20, borderWidth: 1, borderColor: '#334155' },
-  logConfirmCancelText: { color: '#64748b', fontSize: 14 },
+  logConfirmCard: { marginHorizontal: spacing[16], marginBottom: spacing[8], backgroundColor: '#0f2a1e', borderRadius: radius['3xl'], padding: spacing[14], borderWidth: 1, borderColor: '#16a34a40' },
+  logConfirmHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing[10] },
+  logConfirmTitle: { color: colors.success, fontSize: fs.base, fontWeight: fontWeight.bold },
+  logConfirmType: { color: colors.textSecondary, fontSize: fs.sm },
+  logConfirmExercises: { marginBottom: spacing[8] },
+  logConfirmEx: { color: '#cbd5e1', fontSize: fs.base, marginBottom: 3 },
+  logConfirmMeta: { color: colors.textMuted, fontSize: fs.sm, marginBottom: spacing[10] },
+  logConfirmActions: { flexDirection: 'row', gap: spacing[8] },
+  logConfirmSave: { flex: 1, backgroundColor: '#16a34a', borderRadius: radius.lg, padding: spacing[12], alignItems: 'center' },
+  logConfirmSaveText: { color: '#fff', fontSize: fs.md, fontWeight: fontWeight.bold },
+  logConfirmCancel: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing[12], alignItems: 'center', paddingHorizontal: spacing[20], borderWidth: 1, borderColor: colors.border },
+  logConfirmCancelText: { color: colors.textMuted, fontSize: fs.md },
   // Parsing indicator
-  parsingBar: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingBottom: 8 },
-  parsingText: { color: '#64748b', fontSize: 13 },
+  parsingBar: { flexDirection: 'row', alignItems: 'center', gap: spacing[8], paddingHorizontal: spacing[20], paddingBottom: spacing[8] },
+  parsingText: { color: colors.textMuted, fontSize: fs.base },
   // Chat-proposed workout banner
-  proposedWorkoutBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 16, marginTop: 4, marginBottom: 8, backgroundColor: '#1e1b4b', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: '#4f46e5' },
-  proposedWorkoutLeft: { flex: 1, marginRight: 12 },
-  proposedWorkoutTitle: { color: '#a5b4fc', fontSize: 13, fontWeight: '800', marginBottom: 2 },
-  proposedWorkoutSub: { color: '#6366f1', fontSize: 12 },
-  proposedWorkoutApplyBtn: { backgroundColor: '#6366f1', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
-  proposedWorkoutApplyText: { color: '#fff', fontSize: 13, fontWeight: '800' },
+  proposedWorkoutBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: spacing[16], marginTop: spacing[4], marginBottom: spacing[8], backgroundColor: colors.indigoDark, borderRadius: radius['2xl'], padding: spacing[12], borderWidth: 1, borderColor: colors.primaryDark },
+  proposedWorkoutLeft: { flex: 1, marginRight: spacing[12] },
+  proposedWorkoutTitle: { color: '#a5b4fc', fontSize: fs.base, fontWeight: fontWeight.extrabold, marginBottom: 2 },
+  proposedWorkoutSub: { color: colors.primary, fontSize: fs.sm },
+  proposedWorkoutApplyBtn: { backgroundColor: colors.primary, borderRadius: radius.lg, paddingHorizontal: spacing[14], paddingVertical: spacing[8] },
+  proposedWorkoutApplyText: { color: '#fff', fontSize: fs.base, fontWeight: fontWeight.extrabold },
 });

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { StatusBar, View, ActivityIndicator, StyleSheet, Modal, Platform } from 'react-native';
+import { StatusBar, View, ActivityIndicator, StyleSheet, Modal, Platform, TouchableOpacity, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { supabase, getUserProfile } from './src/services/supabase';
+import { colors, fontSize as fs, radius, spacing, fontWeight } from './src/theme';
 
 // ─── Whoop OAuth callback handler ─────────────────────────────────────────────
 // When Whoop redirects back to our app after auth, the popup loads the SPA
@@ -44,9 +45,21 @@ const Tab = createBottomTabNavigator();
 
 type AppState = 'loading' | 'onboarding' | 'main';
 
+const TAB_ICONS: Record<string, { focused: string; unfocused: string }> = {
+  Home: { focused: 'home', unfocused: 'home-outline' },
+  History: { focused: 'time', unfocused: 'time-outline' },
+  Profile: { focused: 'person', unfocused: 'person-outline' },
+};
+
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
-  const icons: Record<string, string> = { Home: '🏠', History: '📋', Profile: '👤' };
-  return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>{icons[name] ?? '●'}</Text>;
+  const icon = TAB_ICONS[name];
+  return (
+    <Ionicons
+      name={(focused ? icon?.focused : icon?.unfocused) as any}
+      size={24}
+      color={focused ? colors.primary : colors.textMuted}
+    />
+  );
 }
 
 function MainTabs({ userId, onStartWorkout, onSignOut, onConnectWhoop, whoopConnectedAt, activeWorkoutId, onResumeWorkout }: {
@@ -63,9 +76,9 @@ function MainTabs({ userId, onStartWorkout, onSignOut, onConnectWhoop, whoopConn
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
-          tabBarStyle: { backgroundColor: '#1e293b', borderTopColor: '#334155', borderTopWidth: 1 },
-          tabBarActiveTintColor: '#6366f1',
-          tabBarInactiveTintColor: '#64748b',
+          tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, borderTopWidth: 1 },
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.textMuted,
           tabBarIcon: ({ focused }) => <TabIcon name={route.name} focused={focused} />,
         })}
       >
@@ -82,7 +95,10 @@ function MainTabs({ userId, onStartWorkout, onSignOut, onConnectWhoop, whoopConn
       {/* Floating pill shown when a workout is running in the background */}
       {activeWorkoutId && (
         <TouchableOpacity style={styles.resumePill} onPress={onResumeWorkout} activeOpacity={0.85}>
-          <Text style={styles.resumePillText}>🏋️ Workout in progress — tap to resume</Text>
+          <View style={styles.resumePillInner}>
+            <Ionicons name="barbell-outline" size={18} color={colors.textPrimary} />
+            <Text style={styles.resumePillText}>Workout in progress — tap to resume</Text>
+          </View>
         </TouchableOpacity>
       )}
     </View>
@@ -169,15 +185,15 @@ export default function App() {
   if (appState === 'loading') {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color="#6366f1" size="large" />
+        <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
   }
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
-      <NavigationContainer theme={{ dark: true, colors: { primary: '#6366f1', background: '#0f172a', card: '#1e293b', text: '#f8fafc', border: '#334155', notification: '#6366f1' } }}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <NavigationContainer theme={{ dark: true, colors: { primary: colors.primary, background: colors.background, card: colors.surface, text: colors.textPrimary, border: colors.border, notification: colors.primary } }}>
         {appState === 'onboarding' && (
           <OnboardingScreen
             onComplete={handleOnboardingComplete}
@@ -242,18 +258,18 @@ export default function App() {
 const styles = StyleSheet.create({
   loading: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
   resumePill: {
     position: 'absolute',
-    bottom: 70, // just above the tab bar
-    left: 16,
-    right: 16,
-    backgroundColor: '#4f46e5',
-    borderRadius: 16,
-    padding: 14,
+    bottom: spacing[70],
+    left: spacing[16],
+    right: spacing[16],
+    backgroundColor: colors.primaryDark,
+    borderRadius: radius['2xl'],
+    padding: spacing[14],
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -261,10 +277,15 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
+  resumePillInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[8],
+  },
   resumePillText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
+    color: colors.textPrimary,
+    fontSize: fs.md,
+    fontWeight: fontWeight.bold,
   },
   modalBackdrop: {
     flex: 1,
@@ -272,9 +293,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#0f172a',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: colors.background,
+    borderTopLeftRadius: radius['5xl'],
+    borderTopRightRadius: radius['5xl'],
     maxHeight: '90%',
     overflow: 'hidden',
   },

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Modal, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { GeneratedWorkout, GeneratedExercise } from '../types';
 import { getRecoveryColor } from '../services/claudeApi';
 import { suggestAlternativeExercises } from '../services/claudeApi';
 import { useWeightUnit } from '../hooks/useWeightUnit';
+import { colors, fontSize as fs, radius, spacing, fontWeight } from '../theme';
 
 interface Props {
   workout: GeneratedWorkout;
@@ -27,7 +29,6 @@ export default function WorkoutCard({ workout, recoveryScore, userContext = {} }
   const { convertWeightString } = useWeightUnit();
   const PREVIEW_COUNT = 4;
 
-  // ── Swap state ──────────────────────────────────────────────────────────────
   const [exercises, setExercises] = useState<GeneratedExercise[]>(workout.exercises);
   const [swapIndex, setSwapIndex] = useState<number | null>(null);
   const [alternatives, setAlternatives] = useState<GeneratedExercise[] | null>(null);
@@ -85,7 +86,8 @@ export default function WorkoutCard({ workout, recoveryScore, userContext = {} }
               </Text>
             </View>
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>⏱ {workout.estimatedDuration} min</Text>
+              <Ionicons name="timer-outline" size={13} color={colors.textSecondary} style={{ marginRight: 4 }} />
+              <Text style={styles.badgeText}>{workout.estimatedDuration} min</Text>
             </View>
           </View>
         </View>
@@ -113,20 +115,27 @@ export default function WorkoutCard({ workout, recoveryScore, userContext = {} }
               onPress={() => handleSwapPress(i)}
               activeOpacity={0.7}
             >
-              <Text style={styles.swapBtnText}>⇄ Swap</Text>
+              <Ionicons name="swap-horizontal-outline" size={11} color={colors.textMuted} style={{ marginRight: 3 }} />
+              <Text style={styles.swapBtnText}>Swap</Text>
             </TouchableOpacity>
           </View>
         </View>
       ))}
       {hiddenCount > 0 && (
         <TouchableOpacity onPress={() => setExpanded(v => !v)} activeOpacity={0.7} style={styles.moreBtn}>
+          <Ionicons
+            name={expanded ? 'chevron-up' : 'chevron-down'}
+            size={13}
+            color={colors.primary}
+            style={{ marginRight: 4 }}
+          />
           <Text style={styles.moreBtnText}>
-            {expanded ? '▲ Show less' : `▼ +${hiddenCount} more exercise${hiddenCount > 1 ? 's' : ''}`}
+            {expanded ? 'Show less' : `+${hiddenCount} more exercise${hiddenCount > 1 ? 's' : ''}`}
           </Text>
         </TouchableOpacity>
       )}
 
-      {/* ── Swap modal ── */}
+      {/* Swap modal */}
       <Modal
         visible={modalVisible}
         transparent
@@ -135,7 +144,6 @@ export default function WorkoutCard({ workout, recoveryScore, userContext = {} }
       >
         <View style={modal.overlay}>
           <View style={modal.sheet}>
-            {/* Header */}
             <View style={modal.header}>
               <View style={modal.headerLeft}>
                 <Text style={modal.title}>Swap Exercise</Text>
@@ -144,14 +152,13 @@ export default function WorkoutCard({ workout, recoveryScore, userContext = {} }
                 )}
               </View>
               <TouchableOpacity onPress={handleCloseModal} style={modal.closeBtn}>
-                <Text style={modal.closeBtnText}>✕</Text>
+                <Ionicons name="close" size={16} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            {/* Content */}
             {loadingSwap && (
               <View style={modal.loadingWrap}>
-                <ActivityIndicator size="large" color="#6366f1" />
+                <ActivityIndicator size="large" color={colors.primary} />
                 <Text style={modal.loadingText}>Finding alternatives…</Text>
               </View>
             )}
@@ -208,62 +215,73 @@ export default function WorkoutCard({ workout, recoveryScore, userContext = {} }
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#1e293b', borderRadius: 20, padding: 20 },
-  header: { marginBottom: 14 },
+  card: { backgroundColor: colors.surface, borderRadius: radius['4xl'], padding: spacing[20] },
+  header: { marginBottom: spacing[14] },
   headerLeft: {},
-  workoutType: { fontSize: 20, fontWeight: '800', color: '#f8fafc', marginBottom: 8 },
-  badges: { flexDirection: 'row', gap: 8 },
+  workoutType: { fontSize: fs['3xl'], fontWeight: fontWeight.extrabold, color: colors.textPrimary, marginBottom: spacing[8] },
+  badges: { flexDirection: 'row', gap: spacing[8] },
   badge: {
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing[10],
+    paddingVertical: spacing[4],
     borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#0f172a',
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  badgeText: { color: '#94a3b8', fontSize: 13, fontWeight: '600' },
-  reasoning: { backgroundColor: '#0f172a', borderRadius: 12, padding: 12, marginBottom: 16 },
-  reasoningLabel: { color: '#6366f1', fontSize: 11, fontWeight: '700', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
-  reasoningText: { color: '#94a3b8', fontSize: 13, lineHeight: 18 },
-  exercisesLabel: { color: '#64748b', fontSize: 13, fontWeight: '700', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
-  exerciseRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#334155' },
+  badgeText: { color: colors.textSecondary, fontSize: fs.base, fontWeight: fontWeight.semibold },
+  reasoning: { backgroundColor: colors.background, borderRadius: radius.xl, padding: spacing[12], marginBottom: spacing[16] },
+  reasoningLabel: { color: colors.primary, fontSize: fs.xs, fontWeight: fontWeight.bold, marginBottom: spacing[4], textTransform: 'uppercase', letterSpacing: 0.5 },
+  reasoningText: { color: colors.textSecondary, fontSize: fs.base, lineHeight: 18 },
+  exercisesLabel: { color: colors.textMuted, fontSize: fs.base, fontWeight: fontWeight.bold, marginBottom: spacing[10], textTransform: 'uppercase', letterSpacing: 0.5 },
+  exerciseRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing[10], borderTopWidth: 1, borderTopColor: colors.border },
   exerciseLeft: { flex: 1 },
-  exerciseName: { color: '#f8fafc', fontSize: 15, fontWeight: '600' },
-  exerciseMeta: { color: '#64748b', fontSize: 12, marginTop: 2 },
-  exerciseRight: { alignItems: 'flex-end', gap: 4 },
-  exerciseSets: { color: '#94a3b8', fontSize: 14, fontWeight: '600' },
-  exerciseWeight: { color: '#6366f1', fontSize: 13 },
-  swapBtn: { marginTop: 2, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: '#0f172a', borderWidth: 1, borderColor: '#334155' },
-  swapBtnText: { color: '#64748b', fontSize: 11, fontWeight: '700' },
-  moreBtn: { alignItems: 'center', paddingVertical: 10, marginTop: 2, borderTopWidth: 1, borderTopColor: '#334155' },
-  moreBtnText: { color: '#6366f1', fontSize: 13, fontWeight: '700' },
+  exerciseName: { color: colors.textPrimary, fontSize: fs.lg, fontWeight: fontWeight.semibold },
+  exerciseMeta: { color: colors.textMuted, fontSize: fs.sm, marginTop: 2 },
+  exerciseRight: { alignItems: 'flex-end', gap: spacing[4] },
+  exerciseSets: { color: colors.textSecondary, fontSize: fs.md, fontWeight: fontWeight.semibold },
+  exerciseWeight: { color: colors.primary, fontSize: fs.base },
+  swapBtn: {
+    marginTop: 2,
+    paddingHorizontal: spacing[8],
+    paddingVertical: 3,
+    borderRadius: radius.md - 2,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  swapBtnText: { color: colors.textMuted, fontSize: fs.xs, fontWeight: fontWeight.bold },
+  moreBtn: { alignItems: 'center', paddingVertical: spacing[10], marginTop: 2, borderTopWidth: 1, borderTopColor: colors.border, flexDirection: 'row', justifyContent: 'center' },
+  moreBtnText: { color: colors.primary, fontSize: fs.base, fontWeight: fontWeight.bold },
 });
 
 const modal = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#1e293b', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '85%' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
+  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radius['5xl'], borderTopRightRadius: radius['5xl'], padding: spacing[24], maxHeight: '85%' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing[20] },
   headerLeft: { flex: 1 },
-  title: { color: '#f8fafc', fontSize: 18, fontWeight: '800', marginBottom: 4 },
-  subtitle: { color: '#64748b', fontSize: 13 },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#334155', alignItems: 'center', justifyContent: 'center', marginLeft: 12 },
-  closeBtnText: { color: '#94a3b8', fontSize: 14, fontWeight: '700' },
-  loadingWrap: { alignItems: 'center', paddingVertical: 40, gap: 16 },
-  loadingText: { color: '#64748b', fontSize: 14 },
-  errorWrap: { alignItems: 'center', paddingVertical: 30, gap: 14 },
-  errorText: { color: '#fca5a5', fontSize: 14, textAlign: 'center' },
-  retryBtn: { backgroundColor: '#334155', borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10 },
-  retryBtnText: { color: '#f8fafc', fontSize: 14, fontWeight: '700' },
-  sectionLabel: { color: '#64748b', fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
-  altCard: { backgroundColor: '#0f172a', borderRadius: 14, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#334155' },
-  altCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 },
+  title: { color: colors.textPrimary, fontSize: fs['2xl'], fontWeight: fontWeight.extrabold, marginBottom: spacing[4] },
+  subtitle: { color: colors.textMuted, fontSize: fs.base },
+  closeBtn: { width: 32, height: 32, borderRadius: radius['3xl'], backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center', marginLeft: spacing[12] },
+  loadingWrap: { alignItems: 'center', paddingVertical: spacing[40], gap: spacing[16] },
+  loadingText: { color: colors.textMuted, fontSize: fs.md },
+  errorWrap: { alignItems: 'center', paddingVertical: spacing[32], gap: spacing[14] },
+  errorText: { color: colors.errorLighter, fontSize: fs.md, textAlign: 'center' },
+  retryBtn: { backgroundColor: colors.border, borderRadius: radius.lg, paddingHorizontal: spacing[20], paddingVertical: spacing[10] },
+  retryBtnText: { color: colors.textPrimary, fontSize: fs.md, fontWeight: fontWeight.bold },
+  sectionLabel: { color: colors.textMuted, fontSize: fs.sm, fontWeight: fontWeight.bold, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: spacing[12] },
+  altCard: { backgroundColor: colors.background, borderRadius: radius['2xl'], padding: spacing[14], marginBottom: spacing[10], borderWidth: 1, borderColor: colors.border },
+  altCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing[6] },
   altCardLeft: { flex: 1 },
-  altName: { color: '#f8fafc', fontSize: 15, fontWeight: '700', marginBottom: 2 },
-  altMeta: { color: '#64748b', fontSize: 12 },
+  altName: { color: colors.textPrimary, fontSize: fs.lg, fontWeight: fontWeight.bold, marginBottom: 2 },
+  altMeta: { color: colors.textMuted, fontSize: fs.sm },
   altCardRight: { alignItems: 'flex-end' },
-  altSets: { color: '#94a3b8', fontSize: 14, fontWeight: '600' },
-  altWeight: { color: '#6366f1', fontSize: 13, marginTop: 2 },
-  altNotes: { color: '#64748b', fontSize: 13, lineHeight: 18, marginBottom: 10 },
-  selectBtnWrap: { borderTopWidth: 1, borderTopColor: '#1e293b', paddingTop: 10, marginTop: 4 },
-  selectBtnText: { color: '#6366f1', fontSize: 13, fontWeight: '700', textAlign: 'right' },
+  altSets: { color: colors.textSecondary, fontSize: fs.md, fontWeight: fontWeight.semibold },
+  altWeight: { color: colors.primary, fontSize: fs.base, marginTop: 2 },
+  altNotes: { color: colors.textMuted, fontSize: fs.base, lineHeight: 18, marginBottom: spacing[10] },
+  selectBtnWrap: { borderTopWidth: 1, borderTopColor: colors.surface, paddingTop: spacing[10], marginTop: spacing[4] },
+  selectBtnText: { color: colors.primary, fontSize: fs.base, fontWeight: fontWeight.bold, textAlign: 'right' },
 });

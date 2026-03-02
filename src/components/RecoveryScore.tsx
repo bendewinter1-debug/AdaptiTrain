@@ -1,14 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors, fontSize as fs, radius, spacing, fontWeight } from '../theme';
 
 interface Props {
   score: number | null;
 }
 
 export default function RecoveryScore({ score }: Props) {
-  const color = score == null ? '#64748b' : score >= 67 ? '#22c55e' : score >= 34 ? '#eab308' : '#ef4444';
+  const color = score == null ? colors.textMuted : score >= 67 ? colors.success : score >= 34 ? colors.warning : colors.error;
   const label = score == null ? 'No data' : score >= 67 ? 'Optimal' : score >= 34 ? 'Moderate' : 'Low Recovery';
-  const emoji = score == null ? '—' : score >= 67 ? '🟢' : score >= 34 ? '🟡' : '🔴';
+  // Colored dot instead of emoji
+  const dotColor = score == null ? colors.textMuted : score >= 67 ? colors.success : score >= 34 ? colors.warning : colors.error;
 
   return (
     <View style={styles.container}>
@@ -18,7 +20,7 @@ export default function RecoveryScore({ score }: Props) {
           {score != null && <Text style={styles.percent}>%</Text>}
         </View>
         <View style={styles.info}>
-          <Text style={styles.emoji}>{emoji}</Text>
+          <View style={[styles.dot, { backgroundColor: dotColor }]} />
           <Text style={[styles.label, { color }]}>{label}</Text>
           <Text style={styles.description}>
             {score == null
@@ -37,21 +39,21 @@ export default function RecoveryScore({ score }: Props) {
 
 const styles = StyleSheet.create({
   container: {},
-  scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 20 },
+  scoreRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[20] },
   scoreCircle: {
     width: 90,
     height: 90,
-    borderRadius: 45,
+    borderRadius: radius.circle,
     borderWidth: 4,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    backgroundColor: '#0f172a',
+    backgroundColor: colors.background,
   },
-  scoreNumber: { fontSize: 30, fontWeight: '800' },
-  percent: { fontSize: 14, color: '#64748b', marginTop: 8 },
+  scoreNumber: { fontSize: fs['7xl'], fontWeight: fontWeight.extrabold },
+  percent: { fontSize: fs.md, color: colors.textMuted, marginTop: spacing[8] },
   info: { flex: 1 },
-  emoji: { fontSize: 20, marginBottom: 4 },
-  label: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
-  description: { fontSize: 13, color: '#64748b', lineHeight: 18 },
+  dot: { width: 10, height: 10, borderRadius: 5, marginBottom: spacing[4] },
+  label: { fontSize: fs['2xl'], fontWeight: fontWeight.bold, marginBottom: spacing[4] },
+  description: { fontSize: fs.base, color: colors.textMuted, lineHeight: 18 },
 });
